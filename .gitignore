@@ -43,4 +43,4 @@ lerna-debug.log*
 !.yarn/versions
 
 # local db volume
-db
+/db
