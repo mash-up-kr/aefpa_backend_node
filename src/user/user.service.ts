@@ -11,7 +11,7 @@ export class UserService {
     },
   ];
 
-  async findUserByEmail(email: string): Promise<User> {
+  async findUserByEmail(email: string): Promise<User | undefined> {
     // TODO: Add database connection
     return this.users.find((user) => user.email === email);
   }
