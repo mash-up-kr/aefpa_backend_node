@@ -4995,9 +4995,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kingbob-server@workspace:.":
+"kki-log-api@workspace:.":
   version: 0.0.0-use.local
-  resolution: "kingbob-server@workspace:."
+  resolution: "kki-log-api@workspace:."
   dependencies:
     "@nestjs/cli": ^8.0.0
     "@nestjs/common": ^8.0.0
