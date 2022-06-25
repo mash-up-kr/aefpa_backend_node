@@ -44,3 +44,9 @@ lerna-debug.log*
 
 # local db volume
 /db/data
+
+# env
+.env
+
+# prisma library
+src/api/server/generated
