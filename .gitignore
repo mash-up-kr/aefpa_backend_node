@@ -43,4 +43,10 @@ lerna-debug.log*
 !.yarn/versions
 
 # local db volume
-/db
+/db/data/*
+
+# env
+.env
+
+# prisma library
+src/api/server/generated
