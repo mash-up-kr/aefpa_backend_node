@@ -1,0 +1,14 @@
+version: '2.2'
+
+services:
+  db: 
+    image: postgres:14.3
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "local"
+      POSTGRES_PASSWORD: "local"
+      POSTGRES_DB: "local"
+    volumes:
+      - ./db/:/var/lib/postgresql/data'
