@@ -11,6 +11,8 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@User() user: UserWithoutPassword) {
-    return this.authService.createJwtFromUser(user);
+    return {
+      accessToken: await this.authService.createJwtFromUser(user),
+    };
   }
 }
