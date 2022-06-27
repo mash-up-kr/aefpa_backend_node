@@ -43,7 +43,7 @@ lerna-debug.log*
 !.yarn/versions
 
 # local db volume
-/db/data
+/db/data/*
 
 # env
 .env
