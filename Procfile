@@ -1,0 +1,1 @@
+web: yarn && yarn start
