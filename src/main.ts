@@ -1,9 +1,12 @@
 import { AppModule } from '@/app.module';
 import { PrismaService } from '@/prisma/prisma.service';
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
+  // TODO: Use config service
+  const port = process.env['PORT'] ?? 3000;
+
   const app = await NestFactory.create(AppModule);
 
   const prismaService = app.get(PrismaService);
@@ -17,6 +20,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  await app.listen(port);
 }
 bootstrap();
