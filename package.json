@@ -5,6 +5,13 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "cacheDirectories": [
+    ".yarn/cache"
+  ],
+  "engines": {
+    "node": "16.13.1",
+    "yarn": "3.2.1"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "yarn db:generate && nest build && cp -r ./src/api ./dist",
@@ -19,7 +26,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:generate": "yarn pnpify prisma generate"
+    "db:generate": "yarn pnpify prisma generate",
+    "db:migrate": "yarn pnpify prisma migrate dev"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",
