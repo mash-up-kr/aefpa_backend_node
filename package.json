@@ -5,6 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "yarn": "3.2.1"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "yarn db:generate && nest build && cp -r ./src/api ./dist",
