@@ -1,14 +1,14 @@
 import { AppModule } from '@/app.module';
 import { PrismaService } from '@/prisma/prisma.service';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  // TODO: Use config service
-  const port = process.env['PORT'] ?? 3000;
-
   const app = await NestFactory.create(AppModule);
+  const config = app.get(ConfigService);
+  const port = config.get<number>('port');
 
   const prismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
@@ -20,7 +20,7 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('kkilog API docs')
     .setDescription('끼록 API 문서')
     .addBearerAuth(
@@ -34,9 +34,13 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .build();
-  const document = SwaggerModule.createDocument(app, config);
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(port);
+  const logger = new Logger('NestApplication');
+  await app.listen(port, () => {
+    logger.log(`Server is ready on port ${port}`);
+  });
 }
 bootstrap();
