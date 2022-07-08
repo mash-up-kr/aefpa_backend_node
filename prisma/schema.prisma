@@ -17,7 +17,7 @@ model User {
   password    String        @db.Char(60) // Bcrypt hash length
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  UserProfile UserProfile[]
+  userProfile UserProfile[]
 }
 
 model UserProfile {
