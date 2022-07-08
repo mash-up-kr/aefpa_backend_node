@@ -1,5 +1,5 @@
 import { JwtPayload } from '@/auth/jwt.types';
-import { UserWithoutPassword } from '@/user/entity/user.entity';
+import { userWithoutPassword, UserWithoutPassword } from '@/user/entity/user.entity';
 import { UserService } from '@/user/user.service';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
@@ -20,6 +20,6 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy, 'jwt') {
    * -> payload에 있는 email 정보로 유저 정보를 찾아서 내려주는 것 뿐
    */
   async validate(payload: JwtPayload): Promise<UserWithoutPassword> {
-    return (await this.userService.findUserByEmail(payload.email)).withoutPassword();
+    return userWithoutPassword(await this.userService.findUserByEmail(payload.email));
   }
 }
