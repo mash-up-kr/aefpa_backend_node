@@ -21,6 +21,15 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('kkilog API docs')
     .setDescription('끼록 API 문서')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'Bearer',
+        name: 'JWT',
+        in: 'header',
+      },
+      'jwt',
+    )
     .setVersion('1.0')
     .build();
 
