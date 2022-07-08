@@ -12,7 +12,7 @@ export class AllExceptionFilter implements ExceptionFilter {
       data: null,
       error: {
         message: HttpStatus[status],
-        description: exception.message ?? '알 수 없는 에러입니다.',
+        description: exception.message ?? 'unknwon error',
       },
     });
   }
