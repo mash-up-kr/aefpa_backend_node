@@ -1,7 +1,6 @@
 import { User } from '@/api/server/generated';
 import { TypesToOmit } from '@/util/types';
 
-// TODO: Add database connection
 export class UserEntity implements User {
   id: number;
   email: string;

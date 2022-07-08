@@ -17,7 +17,6 @@ export class UserService {
   }
 
   async findUserById(id: number): Promise<UserEntity> {
-    // TODO: Add database connection
     const found = this.prismaService.user.findUnique({ where: { id } });
     if (!found) {
       throw new NotFoundException(`User not found with id: ${id}`);
