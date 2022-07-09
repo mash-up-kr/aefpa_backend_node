@@ -2,16 +2,19 @@ import { AuthCodeType } from '@/auth/auth.types';
 import { JwtPayload } from '@/auth/jwt.types';
 import { checkExists, checkNotExists } from '@/common/error-util';
 import { RandomService } from '@/common/random.service';
+import { PrismaService } from '@/prisma/prisma.service';
 import { userWithoutPassword, UserWithoutPassword } from '@/user/entity/user.entity';
 import { UserService } from '@/user/user.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as moment from 'moment';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private prismaService: PrismaService,
     private randomService: RandomService,
   ) {}
 
@@ -42,10 +45,22 @@ export class AuthService {
     checkNotExists(await this.userService.findUserByEmail(email));
 
     const code = this.randomService.getRandomAuthCode(6);
+    const expiredAt = moment().utc().add(10, 'minutes').format();
 
-    // TODO: Record to UserCode
+    await this.prismaService.userCode.create({
+      data: {
+        type,
+        code,
+        expiredAt,
+        user: { create: { email } },
+      },
+    });
+
     // TODO: Send mail to email
 
-    return true;
+    return {
+      email,
+      expiredAt,
+    };
   }
 }
