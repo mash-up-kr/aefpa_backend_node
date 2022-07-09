@@ -5,10 +5,10 @@ import { RandomService } from '@/common/random.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { userWithoutPassword, UserWithoutPassword } from '@/user/entity/user.entity';
 import { UserService } from '@/user/user.service';
+import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as moment from 'moment';
-import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
@@ -72,5 +72,38 @@ export class AuthService {
       email,
       expiredAt,
     };
+  }
+
+  async confirmAuthCode(email: string, type: AuthCodeType, code: string) {
+    const user = checkExists(await this.userService.findUserByEmail(email));
+    const userCode = checkExists(
+      await this.prismaService.userCode.findFirst({
+        where: {
+          code,
+          type,
+          user,
+          expiredAt: {
+            gte: moment().utc().format(),
+          },
+        },
+      }),
+    );
+
+    // Set expiredAt to current time (expired state)
+    await this.prismaService.userCode.update({
+      where: { id: userCode.id },
+      data: { expiredAt: moment().utc().format() },
+    });
+
+    return true;
+  }
+
+  // debug purpose
+  async deleteUser(email: string) {
+    await this.prismaService.userCode.deleteMany({
+      where: { user: { is: { email } } },
+    });
+
+    await this.prismaService.user.delete({ where: { email } });
   }
 }
