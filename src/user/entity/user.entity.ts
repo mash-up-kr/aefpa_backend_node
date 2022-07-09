@@ -5,7 +5,6 @@ export class UserEntity implements User {
   id: number;
   email: string;
   password: string | null;
-  nickname: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,7 +20,6 @@ export function userWithoutPassword(user: User): UserWithoutPassword {
   return {
     id: user.id,
     email: user.email,
-    nickname: user.nickname,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
