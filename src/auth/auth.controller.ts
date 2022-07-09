@@ -3,14 +3,12 @@ import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request'
 import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
 import { ValidateEmailRequest } from '@/auth/entity/validate-email.request';
-import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { LocalAuthGuard } from '@/auth/local-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiBearerAuth,
   ApiBody,
   ApiConflictResponse,
   ApiOperation,
@@ -30,13 +28,6 @@ export class AuthController {
     return {
       accessToken: await this.authService.createJwtFromUser(user),
     };
-  }
-
-  @ApiBearerAuth('jwt')
-  @UseGuards(JwtAuthGuard)
-  @Get('test')
-  async test(@User() user: UserWithoutPassword) {
-    return user;
   }
 
   @ApiOperation({ summary: '인증 코드 발송' })
