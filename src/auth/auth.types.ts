@@ -1,3 +1,3 @@
-export type AuthCodeType = 'sign_up' | 'change_password';
+export type AuthCodeType = 'SIGN_UP' | 'CHANGE_PASSWORD';
 
-export const authCodeTypes: readonly AuthCodeType[] = ['sign_up', 'change_password'] as const;
+export const authCodeTypes: readonly AuthCodeType[] = ['SIGN_UP', 'CHANGE_PASSWORD'] as const;
