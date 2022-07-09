@@ -1,4 +1,4 @@
-import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
+import { AuthCodeRequest } from '@/auth/dto/auth-code.request';
 import { ErrorMessages } from '@/common/error-messages';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, Length } from 'class-validator';

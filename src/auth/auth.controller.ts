@@ -1,9 +1,9 @@
 import { AuthService } from '@/auth/auth.service';
-import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request';
-import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
-import { SignInRequest } from '@/auth/entity/sign-in.request';
-import { ValidateEmailRequest } from '@/auth/entity/validate-email.request';
-import { ValidateNicknameRequest } from '@/auth/entity/validate-nickname.request';
+import { AuthCodeConfirmRequest } from '@/auth/dto/auth-code-confirm.request';
+import { AuthCodeRequest } from '@/auth/dto/auth-code.request';
+import { SignInRequest } from '@/auth/dto/sign-in.request';
+import { ValidateEmailRequest } from '@/auth/dto/validate-email.request';
+import { ValidateNicknameRequest } from '@/auth/dto/validate-nickname.request';
 import { LocalAuthGuard } from '@/auth/local-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
