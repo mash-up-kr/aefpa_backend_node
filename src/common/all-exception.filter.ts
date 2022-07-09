@@ -40,8 +40,8 @@ export class AllExceptionFilter implements ExceptionFilter {
       requestMethodUrl,
       requestHeader,
       requestBody,
+      errorResponse: exception.errorResponse,
     };
-    errMsg.errorResponse = exception.errorResponse;
 
     Logger.error(errMsg, [exception.stack, ...(exception.errorStack ?? [])], '[Exception]');
   }
