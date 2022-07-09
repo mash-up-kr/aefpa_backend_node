@@ -8,7 +8,9 @@ export class AllExceptionFilter implements ExceptionFilter {
     const status =
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    console.error(exception);
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      console.error(exception);
+    }
 
     response.status(status).json({
       data: null,
