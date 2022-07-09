@@ -1,6 +1,6 @@
 import { LogWithImages } from '@/log/log.types';
 import { customPlainToInstance } from '@/util/plain-to-instance';
-import { IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { ArrayMinSize, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import * as moment from 'moment';
 
 export class LogDto {
@@ -8,7 +8,7 @@ export class LogDto {
   id: number;
 
   @IsString({ each: true })
-  @MinLength(1)
+  @ArrayMinSize(1)
   imageUrls: string[];
 
   @IsString()
