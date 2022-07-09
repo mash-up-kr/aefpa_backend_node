@@ -23,4 +23,12 @@ export class UserService {
     }
     return found;
   }
+
+  async findUserByNickname(nickname: string): Promise<UserEntity> {
+    const found = this.prismaService.user.findUnique({ where: { nickname } });
+    if (!found) {
+      throw new NotFoundException(`User not found with nickname: ${nickname}`);
+    }
+    return found;
+  }
 }
