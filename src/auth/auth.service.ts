@@ -66,7 +66,7 @@ export class AuthService {
 
   private isValidPassword(original: string, target: string) {
     // TODO: Use encryption library
-    return original === target;
+    return this.hashPassword.equal({ password: target, hashPassword: original });
   }
 
   async createJwtFromUser(user: UserWithoutPassword) {
