@@ -19,7 +19,7 @@ import { PassportModule } from '@nestjs/passport';
           // TODO: using environment variables
           secret: 'aefpa-secret',
           signOptions: {
-            expiresIn: '60s',
+            expiresIn: '14d',
           },
         };
       },
