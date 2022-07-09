@@ -7,6 +7,7 @@ import { UserModule } from '@/user/user.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ImageModule } from './image/image.module';
 import configuration from './config';
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import configuration from './config';
         };
       },
     }),
+    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

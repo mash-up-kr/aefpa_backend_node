@@ -32,7 +32,7 @@ export class AuthService {
 
   private isValidPassword(original: string, target: string) {
     // TODO: Use encryption library
-    return original === target;
+    return original.trim() === target;
   }
 
   async createJwtFromUser(user: UserWithoutPassword) {
