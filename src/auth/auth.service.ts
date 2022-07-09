@@ -18,7 +18,7 @@ export class AuthService {
   async validate(email: string, pass: string): Promise<UserWithoutPassword> {
     const foundUser = checkExists(await this.userService.findUserByEmail(email));
 
-    if (!this.isValidPassword(foundUser.password, pass)) {
+    if (foundUser.password != null && !this.isValidPassword(foundUser.password, pass)) {
       throw new UnauthorizedException(`Password is incorrect.`);
     }
 
