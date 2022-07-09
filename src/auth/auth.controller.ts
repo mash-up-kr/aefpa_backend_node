@@ -2,12 +2,20 @@ import { AuthService } from '@/auth/auth.service';
 import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request';
 import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
+import { ValidateEmailRequest } from '@/auth/entity/validate-email.request';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { LocalAuthGuard } from '@/auth/local-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConflictResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -47,5 +55,13 @@ export class AuthController {
   @Delete('/user')
   async deleteUser(@Query('email') email: string) {
     await this.authService.deleteUser(email);
+  }
+
+  @ApiOperation({ summary: '이메일 중복 체크' })
+  @ApiBadRequestResponse({ description: '이메일이 잘못되었습니다.' })
+  @ApiConflictResponse({ description: '이메일이 이미 사용중입니다.' })
+  @Get('/validate/email')
+  async validateEmail(@Query() { email }: ValidateEmailRequest) {
+    return await this.authService.validateEmail(email);
   }
 }

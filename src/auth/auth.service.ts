@@ -106,4 +106,11 @@ export class AuthService {
 
     await this.prismaService.user.delete({ where: { email } });
   }
+
+  async validateEmail(email: string) {
+    // 0. Check if email is valid format (done with class validator)
+    // 1. Check if the email is unique
+    checkNotExists(await this.prismaService.user.findUnique({ where: { email } }));
+    return true;
+  }
 }
