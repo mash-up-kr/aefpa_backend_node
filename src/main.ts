@@ -2,7 +2,7 @@ import { AppModule } from '@/app.module';
 import { AllExceptionFilter } from '@/common/all-exception.filter';
 import { ResponseFormatInterceptor } from '@/common/response-format.interceptor';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -17,6 +17,13 @@ async function bootstrap() {
 
   const prismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+    }),
+  );
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('kkilog API docs')
