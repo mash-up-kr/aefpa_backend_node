@@ -5150,6 +5150,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "kki-log-api@workspace:."
   dependencies:
+    "@jest/types": ^28.1.1
     "@nestjs/cli": ^8.0.0
     "@nestjs/common": ^8.0.0
     "@nestjs/core": ^8.0.0
