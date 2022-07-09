@@ -1,4 +1,6 @@
 import { AppModule } from '@/app.module';
+import { AllExceptionFilter } from '@/common/all-exception.filter';
+import { ResponseFormatInterceptor } from '@/common/response-format.interceptor';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -9,6 +11,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
   const port = config.get<number>('port');
+
+  app.useGlobalFilters(new AllExceptionFilter());
+  app.useGlobalInterceptors(new ResponseFormatInterceptor());
 
   const prismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
