@@ -4,10 +4,10 @@ import { AuthModule } from '@/auth/auth.module';
 import { LogModule } from '@/log/log.module';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { UserModule } from '@/user/user.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -18,6 +18,25 @@ import configuration from './config';
     LogModule,
     UserModule,
     PrismaModule,
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          transport: {
+            service: 'gmail',
+            host: 'smtp.gmail.com',
+            auth: {
+              user: config.get('mail.user'),
+              pass: config.get('mail.password'),
+            },
+          },
+          defaults: {
+            from: `"끼록" <${config.get('mail.user')}>`,
+          },
+        };
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

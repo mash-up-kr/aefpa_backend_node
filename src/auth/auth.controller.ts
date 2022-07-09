@@ -1,17 +1,19 @@
 import { AuthService } from '@/auth/auth.service';
+import { SignUpDto } from '@/auth/dto/sign-up.dto';
+import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request';
+import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { LocalAuthGuard } from '@/auth/local-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
+import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Controller, Get, Post, UseGuards, Body } from '@nestjs/common';
-import { SignUpDto } from '@/auth/dto/sign-up.dto';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @ApiOperation({ summary: '로그인' })
   @ApiBody({ type: SignInRequest })
@@ -35,5 +37,23 @@ export class AuthController {
   @Post('signup')
   async signup(@Body() dto: SignUpDto) {
     return this.authService.signup(dto);
+  }
+
+  @ApiOperation({ summary: '인증 코드 발송' })
+  @Post('/code')
+  async generateAuthCode(@Body() { email, type }: AuthCodeRequest) {
+    return await this.authService.generateAuthCode(email, type);
+  }
+
+  @ApiOperation({ summary: '인증 코드 확인' })
+  @Post('/code/check')
+  async confirmAuthCode(@Body() { email, type, code }: AuthCodeConfirmRequest) {
+    return await this.authService.confirmAuthCode(email, type, code);
+  }
+
+  @ApiOperation({ summary: '유저 삭제 (디버깅용)' })
+  @Delete('/user')
+  async deleteUser(@Query('email') email: string) {
+    await this.authService.deleteUser(email);
   }
 }

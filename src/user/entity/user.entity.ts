@@ -4,7 +4,7 @@ import { TypesToOmit } from '@/util/types';
 export class UserEntity implements User {
   id: number;
   email: string;
-  password: string;
+  password: string | null;
   nickname: string;
   createdAt: Date;
   updatedAt: Date;

@@ -22,9 +22,22 @@ export class AllExceptionFilter implements ExceptionFilter {
       data: null,
       error: {
         message: HttpStatus[status],
-        description: exception.message ?? 'unknwon error',
+        description: this.getExceptionMessage(exception) ?? 'unknwon error',
       },
     });
+  }
+
+  private getExceptionMessage(exception: Error): string {
+    let message = exception.message;
+    if (exception instanceof HttpException) {
+      const response = exception.getResponse();
+      if (typeof response === 'object') {
+        message = Array.isArray(response['message']) ? response['message'][0] : response['message'];
+      } else {
+        message = response;
+      }
+    }
+    return message;
   }
 
   //예외 로그
