@@ -1,10 +1,11 @@
 import { AuthService } from '@/auth/auth.service';
+import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { LocalAuthGuard } from '@/auth/local-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('auth')
@@ -27,5 +28,10 @@ export class AuthController {
   @Get('test')
   async test(@User() user: UserWithoutPassword) {
     return user;
+  }
+
+  @Post('/code')
+  async generateAuthCode(@Body() { email, type }: AuthCodeRequest) {
+    return await this.authService.generateAuthCode(email, type);
   }
 }

@@ -2,15 +2,17 @@ import { AppModule } from '@/app.module';
 import { AllExceptionFilter } from '@/common/all-exception.filter';
 import { ResponseFormatInterceptor } from '@/common/response-format.interceptor';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Logger, ValidationError, ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['verbose'],
+  });
   const config = app.get(ConfigService);
-  const port = config.get<number>('port');
+  const port = config.get<number>('port', 3000);
 
   app.useGlobalFilters(new AllExceptionFilter());
   app.useGlobalInterceptors(new ResponseFormatInterceptor());

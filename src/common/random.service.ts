@@ -1,16 +1,17 @@
 import { Injectable, ValueProvider } from '@nestjs/common';
 
+const defaultPool = '0123456789';
+
 @Injectable()
 export class RandomService {
-  static defaultPool: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  static withPool(pool: string = RandomService.defaultPool): ValueProvider<RandomService> {
+  static withPool(pool: string = defaultPool): ValueProvider<RandomService> {
     return {
       provide: RandomService,
       useValue: new RandomService(pool),
     };
   }
 
-  constructor(private readonly pool: string = RandomService.defaultPool) {}
+  private constructor(private readonly pool: string) {}
 
   getRandomInt(min: number, max: number) {
     min = Math.ceil(min);
