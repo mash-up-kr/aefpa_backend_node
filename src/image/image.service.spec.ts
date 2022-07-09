@@ -1,5 +1,5 @@
+import { ImageService } from '@/image/image.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ImageService } from './image.service';
 
 describe('ImageService', () => {
   let service: ImageService;

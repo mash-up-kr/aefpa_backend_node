@@ -21,11 +21,10 @@ export class ImageService {
   }
 
   async delete(id: number) {
-    const foundImage = await this.find(id);
     try {
       return await this.prismaService.image.delete({
         where: {
-          id: foundImage.id,
+          id,
         },
       });
     } catch (err) {
@@ -34,14 +33,12 @@ export class ImageService {
   }
 
   async find(id: number): Promise<Image> {
-    const foundImages = await this.prismaService.image.findUnique({
+    const foundImage = await this.prismaService.image.findUnique({
       where: {
         id,
       },
     });
 
-    const checkedImage = checkExists(foundImages);
-
-    return checkedImage;
+    return checkExists(foundImage);
   }
 }

@@ -32,8 +32,8 @@ export class LogController {
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll() {
-    return await this.logService.findAll();
+  async findAll(@User() user: UserWithoutPassword) {
+    return await this.logService.findAll(user);
   }
 
   @ApiBearerAuth('jwt')

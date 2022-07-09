@@ -6,6 +6,7 @@ import { LogDto } from '@/log/dto/log.dto';
 import { UpdateLogDto } from '@/log/dto/update-log.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
+import { LogWithImages } from '@/log/log.types';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
@@ -42,10 +43,13 @@ export class LogService {
     return LogDto.fromLogIncludeImages(log);
   }
 
-  async findAll(): Promise<LogDto[]> {
+  async findAll(user: UserWithoutPassword): Promise<LogDto[]> {
     const foundLogs = await this.prismaService.log.findMany({
       include: {
         images: true,
+      },
+      where: {
+        userId: user.id,
       },
     });
 
@@ -122,11 +126,7 @@ export class LogService {
   private async checkAuthentication(
     user: UserWithoutPassword,
     logId: number,
-  ): Promise<
-    Log & {
-      images: Image[];
-    }
-  > {
+  ): Promise<LogWithImages> {
     const foundLog = await this.prismaService.log.findUnique({
       include: {
         images: true,

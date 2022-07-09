@@ -1,21 +1,14 @@
-import { Log, Image } from '@/api/server/generated';
+import { LogWithImages } from '@/log/log.types';
 import { customPlainToInstance } from '@/util/plain-to-instance';
-import { BadRequestException } from '@nestjs/common';
-import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import * as moment from 'moment';
 
 export class LogDto {
   @IsNumber()
   id: number;
 
   @IsString({ each: true })
-  @Transform(({ value }) => {
-    if (value.length === 0) {
-      throw new BadRequestException('imageUrl은 최소 한개는 있어야 합니다.');
-    }
-
-    return value;
-  })
+  @MinLength(1)
   imageUrls: string[];
 
   @IsString()
@@ -36,18 +29,14 @@ export class LogDto {
   @MaxLength(20)
   kick?: string | null;
 
-  static fromLogIncludeImages(
-    log: Log & {
-      images: Image[];
-    },
-  ): LogDto {
+  static fromLogIncludeImages(log: LogWithImages): LogDto {
     const { id, createdAt, updatedAt, title, description, kick, images } = log;
 
     return customPlainToInstance(LogDto, {
       id,
       imageUrls: images.map((image) => image.url),
-      createdAt: createdAt.getTime().toString(),
-      updatedAt: updatedAt.getTime().toString(),
+      createdAt: moment(createdAt).format(),
+      updatedAt: moment(updatedAt).format(),
       title,
       description,
       kick,
