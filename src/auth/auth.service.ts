@@ -8,6 +8,7 @@ import { UserService } from '@/user/user.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as moment from 'moment';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,7 @@ export class AuthService {
     private jwtService: JwtService,
     private prismaService: PrismaService,
     private randomService: RandomService,
+    private mailerService: MailerService,
   ) {}
 
   async validate(email: string, pass: string): Promise<UserWithoutPassword> {
@@ -56,7 +58,15 @@ export class AuthService {
       },
     });
 
-    // TODO: Send mail to email
+    this.mailerService.sendMail({
+      to: email,
+      subject: '[끼록] 이메일 인증 메일입니다 :)',
+      // TODO: Template
+      html: `
+      <p>끼록에 오신 것을 환영해요! 아래 인증 코드를 끼록 앱에서 입력해주세요.</p>
+      <p>인증 코드: <span>${code}</span></p>
+      `,
+    });
 
     return {
       email,
