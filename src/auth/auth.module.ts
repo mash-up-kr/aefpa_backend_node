@@ -1,6 +1,6 @@
 import { AuthController } from '@/auth/auth.controller';
 import { AuthService } from '@/auth/auth.service';
-import { hashPassword } from '@/auth/hash-password';
+import { HashPassword } from '@/auth/hash-password';
 import { JwtAuthStrategy } from '@/auth/jwt.strategy';
 import { LocalStrategy } from '@/auth/local.strategy';
 import { RandomService } from '@/common/random.service';
@@ -33,7 +33,7 @@ import { PassportModule } from '@nestjs/passport';
     AuthService,
     LocalStrategy,
     JwtAuthStrategy,
-    hashPassword,
+    HashPassword,
     PrismaService,
   ],
   controllers: [AuthController],

@@ -1,6 +1,6 @@
 import { AuthCodeType } from '@/auth/auth.types';
 import { SignUpDto } from '@/auth/dto/sign-up.dto';
-import { hashPassword } from '@/auth/hash-password';
+import { HashPassword } from '@/auth/hash-password';
 import { JwtPayload } from '@/auth/jwt.types';
 import { checkExists, checkNotExists } from '@/common/error-util';
 import { RandomService } from '@/common/random.service';
@@ -17,7 +17,7 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private hashPassword: hashPassword,
+    private hashPassword: HashPassword,
     private prismaService: PrismaService,
     private randomService: RandomService,
     private mailerService: MailerService,
