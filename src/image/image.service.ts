@@ -1,7 +1,7 @@
 import { Image } from '@/api/server/generated';
 import { checkExists } from '@/common/error-util';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 @Injectable()
 export class ImageService {
