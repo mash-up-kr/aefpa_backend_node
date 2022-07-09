@@ -30,6 +30,7 @@ export class AuthController {
     return user;
   }
 
+  @ApiOperation({ summary: '인증 코드 발송' })
   @Post('/code')
   async generateAuthCode(@Body() { email, type }: AuthCodeRequest) {
     return await this.authService.generateAuthCode(email, type);
