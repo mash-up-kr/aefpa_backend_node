@@ -8,9 +8,11 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['verbose'],
+  });
   const config = app.get(ConfigService);
-  const port = config.get<number>('port');
+  const port = config.get<number>('port', 3000);
 
   app.useGlobalFilters(new AllExceptionFilter());
   app.useGlobalInterceptors(new ResponseFormatInterceptor());
@@ -20,6 +22,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
+      stopAtFirstError: true,
       transform: true,
       whitelist: true,
     }),
