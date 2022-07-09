@@ -1,5 +1,5 @@
 import { JwtPayload } from '@/auth/jwt.types';
-import { UserWithoutPassword } from '@/user/entity/user.entity';
+import { userWithoutPassword, UserWithoutPassword } from '@/user/entity/user.entity';
 import { UserService } from '@/user/user.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -15,7 +15,7 @@ export class AuthService {
       throw new UnauthorizedException(`Password is incorrect.`);
     }
 
-    return foundUser.withoutPassword();
+    return userWithoutPassword(foundUser);
   }
 
   private isValidPassword(original: string, target: string) {
