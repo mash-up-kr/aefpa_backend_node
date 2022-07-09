@@ -42,9 +42,12 @@ export class AuthService {
     const user = await this.prismaService.user.create({
       data: {
         email,
-        // FIXME: nickname
-        nickname,
         password: await this.hashPassword.hash(password),
+        userProfile: {
+          create: {
+            nickname,
+          },
+        },
       },
     });
 
@@ -88,8 +91,7 @@ export class AuthService {
         type,
         code,
         expiredAt,
-        // FIXME: nickname
-        user: { create: { email, nickname: '' } },
+        user: { create: { email } },
       },
     });
 
