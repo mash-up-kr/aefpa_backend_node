@@ -916,6 +916,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nestjs/config@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@nestjs/config@npm:2.1.0"
+  dependencies:
+    dotenv: 16.0.1
+    dotenv-expand: 8.0.3
+    lodash: 4.17.21
+    uuid: 8.3.2
+  peerDependencies:
+    "@nestjs/common": ^7.0.0 || ^8.0.0
+    reflect-metadata: ^0.1.13
+    rxjs: ^6.0.0 || ^7.2.0
+  checksum: 6e7af8a981d315f0ada49b7d9b833e6e716eb84e5a087810042bb05dd560b4aba1b3c92a177fde9b073f1865bee13dc00c7903ebee0a390bfda0dd41c1fa3575
+  languageName: node
+  linkType: hard
+
 "@nestjs/core@npm:^8.0.0":
   version: 8.4.7
   resolution: "@nestjs/core@npm:8.4.7"
@@ -3167,6 +3183,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv-expand@npm:8.0.3":
+  version: 8.0.3
+  resolution: "dotenv-expand@npm:8.0.3"
+  checksum: 128ce90ac825b543de3ece0154a51b056ab0dc36bb26d97a68cd0b8707327ecd3c182fb6ac63b26a0fcdfa85064419906a1065cb634f1f9dc08ad311375f1fc0
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:16.0.1":
+  version: 16.0.1
+  resolution: "dotenv@npm:16.0.1"
+  checksum: f459ffce07b977b7f15d8cc4ee69cdff77d4dd8c5dc8c85d2d485ee84655352c2415f9dd09d42b5b5985ced3be186130871b34e2f3e2569ebc72fbc2e8096792
+  languageName: node
+  linkType: hard
+
 "ecdsa-sig-formatter@npm:1.0.11":
   version: 1.0.11
   resolution: "ecdsa-sig-formatter@npm:1.0.11"
@@ -5152,6 +5182,7 @@ __metadata:
   dependencies:
     "@nestjs/cli": ^8.0.0
     "@nestjs/common": ^8.0.0
+    "@nestjs/config": ^2.1.0
     "@nestjs/core": ^8.0.0
     "@nestjs/jwt": ^8.0.1
     "@nestjs/passport": ^8.2.2
