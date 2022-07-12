@@ -2,12 +2,19 @@ import { AuthService } from '@/auth/auth.service';
 import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request';
 import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
-import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { ValidateEmailRequest } from '@/auth/entity/validate-email.request';
+import { ValidateNicknameRequest } from '@/auth/entity/validate-nickname.request';
 import { LocalAuthGuard } from '@/auth/local-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiConflictResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -22,13 +29,6 @@ export class AuthController {
     return {
       accessToken: await this.authService.createJwtFromUser(user),
     };
-  }
-
-  @ApiBearerAuth('jwt')
-  @UseGuards(JwtAuthGuard)
-  @Get('test')
-  async test(@User() user: UserWithoutPassword) {
-    return user;
   }
 
   @ApiOperation({ summary: '인증 코드 발송' })
@@ -47,5 +47,21 @@ export class AuthController {
   @Delete('/user')
   async deleteUser(@Query('email') email: string) {
     await this.authService.deleteUser(email);
+  }
+
+  @ApiOperation({ summary: '이메일 중복 체크' })
+  @ApiBadRequestResponse({ description: '이메일이 잘못되었습니다.' })
+  @ApiConflictResponse({ description: '이메일이 이미 사용중입니다.' })
+  @Get('/validate/email')
+  async validateEmail(@Query() { email }: ValidateEmailRequest) {
+    return await this.authService.validateEmail(email);
+  }
+
+  @ApiOperation({ summary: '닉네임 중복 체크' })
+  @ApiBadRequestResponse({ description: '닉네임이 잘못되었습니다.' })
+  @ApiConflictResponse({ description: '닉네임이 이미 사용중입니다.' })
+  @Get('/validate/nickname')
+  async validateNickname(@Query() { nickname }: ValidateNicknameRequest) {
+    return await this.authService.validateNickname(nickname);
   }
 }

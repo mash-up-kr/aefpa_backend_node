@@ -12,12 +12,12 @@ datasource db {
 }
 
 model User {
-  id          Int           @id @default(autoincrement())
-  email       String        @unique @db.VarChar(256)
-  password    String?       @db.Char(60) // Bcrypt hash length
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  userProfile UserProfile[]
+  id          Int          @id @default(autoincrement())
+  email       String       @unique @db.VarChar(256)
+  password    String?      @db.Char(60) // Bcrypt hash length
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  userProfile UserProfile?
   userCode    UserCode[]
   logs        Log[]
 }
@@ -29,7 +29,7 @@ model UserProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    Int      @unique
 }
 
 model UserCode {
