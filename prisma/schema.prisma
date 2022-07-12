@@ -50,9 +50,9 @@ enum UserCodeType {
 
 model Log {
   id          Int      @id @default(autoincrement())
-  title       String   @db.VarChar(100)
+  title       String   @db.VarChar(20)
   description String?  @db.VarChar(300)
-  kick        String?  @db.VarChar(100)
+  kick        String?  @db.VarChar(20)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User?    @relation(fields: [userId], references: [id])
