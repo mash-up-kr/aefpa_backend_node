@@ -8,7 +8,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ImageModule } from './image/image.module';
+import { S3Module } from './s3/s3.module';
 import configuration from './config';
+import { MulterModule } from '@nestjs/platform-express';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -39,6 +41,7 @@ import configuration from './config';
       },
     }),
     ImageModule,
+    S3Module,
   ],
   controllers: [AppController],
   providers: [AppService],
