@@ -1,5 +1,5 @@
 import { AuthService } from '@/auth/auth.service';
-import { SignUpDto } from '@/auth/dto/sign-up.dto';
+import { SignUpRequest } from '@/auth/dto/sign-up.request';
 import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request';
 import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
@@ -34,7 +34,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '회원가입' })
   @Post('signup')
-  async signup(@Body() dto: SignUpDto) {
+  async signup(@Body() dto: SignUpRequest) {
     return this.authService.signup(dto);
   }
 

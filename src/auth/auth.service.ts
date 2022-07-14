@@ -1,5 +1,5 @@
 import { AuthCodeType } from '@/auth/auth.types';
-import { SignUpDto } from '@/auth/dto/sign-up.dto';
+import { SignUpRequest } from '@/auth/dto/sign-up.request';
 import { HashPassword } from '@/auth/hash-password';
 import { JwtPayload } from '@/auth/jwt.types';
 import { checkExists, checkNotExists } from '@/common/error-util';
@@ -33,7 +33,7 @@ export class AuthService {
     return userWithoutPassword(foundUser);
   }
 
-  async signup({ email, nickname, password }: SignUpDto) {
+  async signup({ email, nickname, password }: SignUpRequest) {
     const foundUser = await this.userService.findUserByEmail(email);
     if (foundUser) {
       throw new BadRequestException(`Email is already exists`);

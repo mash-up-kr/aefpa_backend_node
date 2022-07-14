@@ -1,6 +1,6 @@
 import { LogWithImages } from '@/log/log.types';
 import { customPlainToInstance } from '@/util/plain-to-instance';
-import { ArrayMinSize, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ArrayMinSize, IsNumber, IsOptional, IsString, MaxLength } from '@/validation';
 import * as moment from 'moment';
 
 export class LogDto {

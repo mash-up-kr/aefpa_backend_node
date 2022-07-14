@@ -1,6 +1,6 @@
 import { LogDto } from '@/log/dto/log.dto';
+import { IsOptional, IsString } from '@/validation';
 import { OmitType } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateLogDto extends OmitType(LogDto, ['id', 'createdAt', 'updatedAt']) {
   @IsOptional()
