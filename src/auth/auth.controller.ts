@@ -39,19 +39,19 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '인증 코드 발송' })
-  @Post('/code')
+  @Post('code')
   async generateAuthCode(@Body() { email, type }: AuthCodeRequest) {
     return await this.authService.generateAuthCode(email, type);
   }
 
   @ApiOperation({ summary: '인증 코드 확인' })
-  @Post('/code/check')
+  @Post('code/check')
   async confirmAuthCode(@Body() { email, type, code }: AuthCodeConfirmRequest) {
     return await this.authService.confirmAuthCode(email, type, code);
   }
 
   @ApiOperation({ summary: '유저 삭제 (디버깅용)' })
-  @Delete('/user')
+  @Delete('user')
   async deleteUser(@Query('email') email: string) {
     await this.authService.deleteUser(email);
   }
@@ -59,7 +59,7 @@ export class AuthController {
   @ApiOperation({ summary: '이메일 중복 체크' })
   @ApiBadRequestResponse({ description: '이메일이 잘못되었습니다.' })
   @ApiConflictResponse({ description: '이메일이 이미 사용중입니다.' })
-  @Get('/validate/email')
+  @Get('validate/email')
   async validateEmail(@Query() { email }: ValidateEmailRequest) {
     return await this.authService.validateEmail(email);
   }
@@ -67,7 +67,7 @@ export class AuthController {
   @ApiOperation({ summary: '닉네임 중복 체크' })
   @ApiBadRequestResponse({ description: '닉네임이 잘못되었습니다.' })
   @ApiConflictResponse({ description: '닉네임이 이미 사용중입니다.' })
-  @Get('/validate/nickname')
+  @Get('validate/nickname')
   async validateNickname(@Query() { nickname }: ValidateNicknameRequest) {
     return await this.authService.validateNickname(nickname);
   }
