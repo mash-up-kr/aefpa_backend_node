@@ -76,7 +76,7 @@ export class LogController {
     @UploadedFiles()
     images: Express.Multer.File[],
   ) {
-    if (!images || images.length === 0 || req.fileValidationError) {
+    if (!images || images.length === 0) {
       throw new BadRequestException('you should upload at least one image');
     }
 

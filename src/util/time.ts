@@ -1,5 +1,5 @@
 import * as moment from 'moment';
 
-export function getCurrentDate(format?: string) {
+export function getCurrentDateAS(format?: string) {
   return moment().utc().format(format);
 }

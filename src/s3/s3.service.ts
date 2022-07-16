@@ -1,5 +1,5 @@
 import { BucketFolderType } from '@/s3/s3.type';
-import { getCurrentDate } from '@/util/time';
+import { getCurrentDateAS } from '@/util/time';
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
@@ -51,8 +51,8 @@ export class S3Service {
     }
   }
 
-  // example: 20220712bb5dc8842ca31d4603d6aa11448d1654
+  // example: 20220712-bb5dc8842ca31d4603d6aa11448d1654
   private generateFileName() {
-    return getCurrentDate('yyyyMMD').concat('-').concat(crypto.randomBytes(20).toString('hex'));
+    return getCurrentDateAS('yyyyMMDD').concat('-').concat(crypto.randomBytes(20).toString('hex'));
   }
 }
