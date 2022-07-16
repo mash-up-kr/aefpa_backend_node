@@ -1,4 +1,6 @@
 import { AuthCodeType } from '@/auth/auth.types';
+import { SignUpDto } from '@/auth/dto/sign-up.dto';
+import { HashPassword } from '@/auth/hash-password';
 import { JwtPayload } from '@/auth/jwt.types';
 import { checkExists, checkNotExists } from '@/common/error-util';
 import { RandomService } from '@/common/random.service';
@@ -6,7 +8,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { userWithoutPassword, UserWithoutPassword } from '@/user/entity/user.entity';
 import { UserService } from '@/user/user.service';
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as moment from 'moment';
 
@@ -15,6 +17,7 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private hashPassword: HashPassword,
     private prismaService: PrismaService,
     private randomService: RandomService,
     private mailerService: MailerService,
@@ -30,9 +33,43 @@ export class AuthService {
     return userWithoutPassword(foundUser);
   }
 
+  async signup({ email, nickname, password }: SignUpDto) {
+    const foundUser = await this.userService.findUserByEmail(email);
+    if (foundUser) {
+      throw new BadRequestException(`Email is already exists`);
+    }
+
+    const user = await this.prismaService.user.create({
+      data: {
+        email,
+        password: await this.hashPassword.hash(password),
+        userProfile: {
+          create: {
+            nickname,
+          },
+        },
+      },
+    });
+
+    const token = await this.createJwtFromUser(user);
+
+    return {
+      user,
+      token,
+    };
+  }
+
+  async validateUserEmail(email: string): Promise<boolean> {
+    const foundUser = await this.userService.findUserByEmail(email);
+    if (foundUser) {
+      return false;
+    }
+    return true;
+  }
+
   private isValidPassword(original: string, target: string) {
     // TODO: Use encryption library
-    return original.trim() === target;
+    return this.hashPassword.equal({ password: target, hashPassword: original });
   }
 
   async createJwtFromUser(user: UserWithoutPassword) {

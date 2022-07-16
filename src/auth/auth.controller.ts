@@ -1,4 +1,5 @@
 import { AuthService } from '@/auth/auth.service';
+import { SignUpDto } from '@/auth/dto/sign-up.dto';
 import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request';
 import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
@@ -29,6 +30,12 @@ export class AuthController {
     return {
       accessToken: await this.authService.createJwtFromUser(user),
     };
+  }
+
+  @ApiOperation({ summary: '회원가입' })
+  @Post('signup')
+  async signup(@Body() dto: SignUpDto) {
+    return this.authService.signup(dto);
   }
 
   @ApiOperation({ summary: '인증 코드 발송' })
