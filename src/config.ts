@@ -20,4 +20,12 @@ export default () => ({
     user: requireEnv('MAIL_USER'),
     password: requireEnv('MAIL_PASSWORD'),
   },
+  aws: {
+    accessKey: requireEnv('ACCESS_KEY'),
+    secretAccessKey: requireEnv('SECRET_ACCESS_KEY'),
+    region: requireEnv('REGION'),
+    s3: {
+      bucket: requireEnv('BUCKET'),
+    },
+  },
 });
