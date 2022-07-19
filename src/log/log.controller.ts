@@ -13,9 +13,11 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CursorPaginationRequestDto } from '@/common/dto/pagination-request.dto';
 
 @ApiTags('끼록 > 로그')
 @Controller('logs')
@@ -32,8 +34,11 @@ export class LogController {
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@User() user: UserWithoutPassword) {
-    return await this.logService.findAll(user);
+  async findAll(
+    @Query() cursorPaginationRequestDto: CursorPaginationRequestDto,
+    @User() user: UserWithoutPassword,
+  ) {
+    return await this.logService.findAll(cursorPaginationRequestDto, user);
   }
 
   @ApiBearerAuth('jwt')
