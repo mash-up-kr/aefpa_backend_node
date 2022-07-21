@@ -21,13 +21,14 @@ import {
   UploadedFiles,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('끼록 > 로그')
 @Controller('logs')
 export class LogController {
   constructor(private readonly logService: LogService, private readonly s3Service: S3Service) {}
 
+  @ApiOperation({ summary: '로그 생성' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -35,6 +36,7 @@ export class LogController {
     return await this.logService.create(createLogDto, user);
   }
 
+  @ApiOperation({ summary: '로그 목록 조회(페이지네이션)' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -42,6 +44,7 @@ export class LogController {
     return await this.logService.findAll(user);
   }
 
+  @ApiOperation({ summary: '로그 하나 조회' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get(':id')
@@ -49,6 +52,7 @@ export class LogController {
     return await this.logService.findById(id);
   }
 
+  @ApiOperation({ summary: '로그 수정' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
@@ -60,6 +64,7 @@ export class LogController {
     return await this.logService.update(id, updateLogDto, user);
   }
 
+  @ApiOperation({ summary: '로그 삭제' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
@@ -67,6 +72,7 @@ export class LogController {
     return await this.logService.delete(id, user);
   }
 
+  @ApiOperation({ summary: '로그 이미지 업로드' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Post('upload-image')
