@@ -1,4 +1,3 @@
-import { Log, Image } from '@/api/server/generated';
 import { checkExists } from '@/common/error-util';
 import { ImageService } from '@/image/image.service';
 import { CreateLogDto } from '@/log/dto/create-log.dto';
@@ -77,32 +76,37 @@ export class LogService {
 
     const checkedLog = await this.checkAuthentication(user, id);
 
-    //TODO:트랜잭션 start
     const existImages = checkedLog.images;
     const existImageUrls = existImages.map((image) => image.url);
 
     const deleteImages = existImages.filter((existUrl) => !imageUrls.includes(existUrl.url));
     const insertUrls = imageUrls.filter((imageUrl) => !existImageUrls.includes(imageUrl));
 
-    // 삭제할 이미지는 삭제
-    await Promise.all(deleteImages.map((image) => this.imageService.delete(image.id)));
-    // 추가할 이미지는 추가
-    await Promise.all(insertUrls.map((url) => this.imageService.create(url, checkedLog.id)));
+    // transaction start
+    const updateLog = await this.prismaService.$transaction(async () => {
+      // 삭제할 이미지는 삭제
+      await Promise.all(deleteImages.map((image) => this.imageService.delete(image.id)));
+      // 추가할 이미지는 추가
+      await Promise.all(insertUrls.map((url) => this.imageService.create(url, checkedLog.id)));
 
-    const updateLog = await this.prismaService.log.update({
-      include: {
-        images: true,
-      },
-      where: {
-        id,
-      },
-      data: {
-        title,
-        description,
-        kick,
-      },
+      //update
+      const updateLog = await this.prismaService.log.update({
+        include: {
+          images: true,
+        },
+        where: {
+          id,
+        },
+        data: {
+          title,
+          description,
+          kick,
+        },
+      });
+
+      return updateLog;
     });
-    //TODO:트랜잭션 end
+    // transaction end
 
     return LogDto.fromLogIncludeImages(updateLog);
   }
@@ -110,15 +114,17 @@ export class LogService {
   async delete(id: number, user: UserWithoutPassword): Promise<boolean> {
     const checkedLog = await this.checkAuthentication(user, id);
 
-    //TODO: 트랜잭션 start
-    await this.prismaService.log.delete({
-      where: {
-        id: checkedLog.id,
-      },
-    });
+    // transaction start
+    await this.prismaService.$transaction(async () => {
+      await this.prismaService.log.delete({
+        where: {
+          id: checkedLog.id,
+        },
+      });
 
-    await Promise.all(checkedLog.images.map((image) => this.imageService.delete(image.id)));
-    //TODO: 트랜잭션 end
+      await Promise.all(checkedLog.images.map((image) => this.imageService.delete(image.id)));
+    });
+    // transaction end
 
     return true;
   }
