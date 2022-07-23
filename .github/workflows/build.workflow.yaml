@@ -20,11 +20,14 @@ jobs:
         run: |
           yarn set version 3.2.1
           CI=true; YARN_ENABLE_IMMUTABLE_INSTALLS=false; yarn install
+
       - name: Run tests
         run: |
           yarn db:generate
           yarn test
-      - uses: sarisia/actions-status-discord@v1
+
+      - name: Notify status to Discord channel
+        uses: sarisia/actions-status-discord@v1
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
         if: failure()
