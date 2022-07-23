@@ -3,6 +3,7 @@ export const commonErrors = [
   'INVALID LENGTH',
   'ALREADY EXISTS',
   'NOT FOUND',
+  'INCORRECT',
 ] as const;
 
 export type CommonError = typeof commonErrors[number];
@@ -27,4 +28,5 @@ export const ErrorMessages: Record<CamelCase<CommonError>, (context?: string) =>
   invalidLength: ErrorFn('INVALID LENGTH'),
   alreadyExists: ErrorFn('ALREADY EXISTS'),
   notFound: ErrorFn('NOT FOUND'),
+  incorrect: ErrorFn('INCORRECT'),
 };
