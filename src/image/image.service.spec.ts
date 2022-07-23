@@ -1,4 +1,6 @@
 import { ImageService } from '@/image/image.service';
+import { PrismaModule } from '@/prisma/prisma.module';
+import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 
 describe('ImageService', () => {
@@ -6,6 +8,7 @@ describe('ImageService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [PrismaModule, ConfigModule],
       providers: [ImageService],
     }).compile();
 

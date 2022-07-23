@@ -7,10 +7,9 @@ import { UserModule } from '@/user/user.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import configuration from './config';
 import { ImageModule } from './image/image.module';
 import { S3Module } from './s3/s3.module';
-import configuration from './config';
-import { MulterModule } from '@nestjs/platform-express';
 @Module({
   imports: [
     ConfigModule.forRoot({
