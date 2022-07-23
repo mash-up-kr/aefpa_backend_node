@@ -46,7 +46,7 @@ lerna-debug.log*
 /db/data/*
 
 # env
-.env
+*.env
 
 # prisma library
 src/api/server/generated
