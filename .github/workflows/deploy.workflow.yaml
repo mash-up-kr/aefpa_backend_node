@@ -1,0 +1,64 @@
+name: Deployment
+
+env:
+  FARGATE_CLUSTER: default
+  FARGATE_SERVICE: kki-log-api
+
+on:
+  push:
+    branches:
+      - 'develop'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Refs:
+      # https://stackoverflow.com/questions/67062308/getting-yn0028-the-lockfile-would-have-been-modified-by-this-install-which-is-e
+      - name: Install packages
+        run: |
+          yarn set version 3.2.1
+          CI=true; YARN_ENABLE_IMMUTABLE_INSTALLS=false; yarn install
+      - name: Run tests
+        run: |
+          yarn db:generate
+          yarn test
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Image and Deploy
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: kki-log-api
+          IMAGE_TAG: latest
+        run: |
+          # Build a docker container and push it to ECR
+          # run 'force new deployment' to pull image and re-deploy
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          aws ecs update-service --cluster $FARGATE_CLUSTER --service $FARGATE_SERVICE --force-new-deployment
+      - uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+        if: always()
