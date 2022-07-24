@@ -1,5 +1,5 @@
 // from ... to string encoded value
-export function encodeCursor(columnValue: string | Date) {
+export function encodeCursor(columnValue: string | Date | number) {
   const endcodeWithBase64 = (targetValue: string) =>
     Buffer.from(targetValue, 'utf8').toString('base64');
 
@@ -7,14 +7,19 @@ export function encodeCursor(columnValue: string | Date) {
 
   if (typeof columnValue === 'string') {
     stringValue = columnValue;
-  } else if (columnValue instanceof Date) {
-    stringValue = columnValue.getTime().toString();
+  } else if (typeof columnValue === 'number') {
+    stringValue = columnValue.toString();
+  } else {
+    // object
+    if (columnValue instanceof Date) {
+      stringValue = columnValue.getTime().toString();
+    }
   }
 
   return endcodeWithBase64(stringValue);
 }
 
-type CursorType = 'Date' | 'string';
+type CursorType = 'Date' | 'string' | 'number';
 
 // from string encoded value to decoded column value (ex) Date, string, number.. )
 export function decodeCursor(cursorType: CursorType, encodedValue: string) {
@@ -23,9 +28,14 @@ export function decodeCursor(cursorType: CursorType, encodedValue: string) {
 
   const decodedValue = decodeWithBase64(encodedValue);
 
-  if (cursorType === 'Date') {
-    return new Date(+decodedValue);
-  } else if (cursorType === 'string') {
+  if (cursorType === 'string') {
     return decodedValue;
+  } else if (cursorType === 'number') {
+    return +decodedValue;
+  } else {
+    // object
+    if (cursorType === 'Date') {
+      return new Date(+decodedValue);
+    }
   }
 }

@@ -46,7 +46,7 @@ export class LogDto {
         title,
         description,
         kick,
-        cursor: encodeCursor(log[cursorColumn] as Date),
+        cursor: encodeCursor(log[cursorColumn] as number),
       });
     }
 

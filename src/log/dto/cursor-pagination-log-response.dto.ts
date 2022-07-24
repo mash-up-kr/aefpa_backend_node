@@ -13,12 +13,12 @@ export class CursorPaginationLogResponseDto {
 
   static fromLogIncludeImages(
     logs: LogWithImages[],
-    cursorPaginationRespontDto: CursorPaginationResponseDto,
+    cursorPaginationResponseDto: CursorPaginationResponseDto,
   ) {
-    const { pageSize, totalCount, endCursor, hasNextPage } = cursorPaginationRespontDto;
+    const { pageSize, totalCount, endCursor, hasNextPage } = cursorPaginationResponseDto;
 
     return customPlainToInstance(CursorPaginationLogResponseDto, {
-      logs: logs.map((log) => LogDto.fromLogIncludeImages(log, 'createdAt')),
+      logs: logs.map((log) => LogDto.fromLogIncludeImages(log, 'id')),
       pageInfo: CursorPaginationResponseDto.toDto(pageSize, totalCount, endCursor, hasNextPage),
     });
   }

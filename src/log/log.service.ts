@@ -10,7 +10,6 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CursorPaginationRequestDto } from '@/common/dto/pagination-request.dto';
 import { CursorPaginationLogResponseDto } from '@/log/dto/cursor-pagination-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
-import { Prisma } from '@/api/server/generated';
 
 @Injectable()
 export class LogService {
@@ -52,7 +51,7 @@ export class LogService {
   ): Promise<LogDto[] | CursorPaginationLogResponseDto> {
     const { pageSize, endCursor } = cursorPaginationRequestDto;
 
-    // find all withdout cursor pagination
+    // find all without cursor pagination
     if (!pageSize) {
       const foundLogs = await this.prismaService.log.findMany({
         include: {
@@ -170,7 +169,7 @@ export class LogService {
     // first page
     if (!endCursor) {
       const foundLogs = await this.prismaService.log.findMany({
-        take: pageSize + 1,
+        take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나더 조회
         include: {
           images: true,
         },
@@ -178,7 +177,7 @@ export class LogService {
           userId: user.id,
         },
         orderBy: {
-          createdAt: 'desc',
+          id: 'desc',
         },
       });
 
@@ -187,7 +186,7 @@ export class LogService {
 
       if (pageSize + 1 === foundLogs.length) {
         hasNextPage = true;
-        foundLogs.pop();
+        foundLogs.pop(); // 다음 페이지 존재하면 pop
       }
 
       // get has totalCount
@@ -199,7 +198,7 @@ export class LogService {
 
       //get endCursor
       const endCursor =
-        foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].createdAt) : null;
+        foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].id) : null;
 
       return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, {
         pageSize,
@@ -210,21 +209,21 @@ export class LogService {
     }
 
     //  after second page...
-    const decodedEndCursor = decodeCursor('Date', endCursor);
+    const decodedEndCursor = decodeCursor('number', endCursor) as number;
 
     const foundLogs = await this.prismaService.log.findMany({
-      take: pageSize + 1,
+      take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나 더 조회
       include: {
         images: true,
       },
       where: {
         userId: user.id,
-        createdAt: {
+        id: {
           lt: decodedEndCursor,
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        id: 'desc',
       },
     });
 
@@ -233,7 +232,7 @@ export class LogService {
 
     if (pageSize + 1 === foundLogs.length) {
       hasNextPage = true;
-      foundLogs.pop();
+      foundLogs.pop(); // 다음 페이지 존재하면 pop
     }
 
     // get has totalCount
@@ -245,7 +244,7 @@ export class LogService {
 
     //get endCursor
     const endCursorResult =
-      foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].createdAt) : null;
+      foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].id) : null;
 
     return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, {
       pageSize,
