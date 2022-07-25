@@ -1,0 +1,33 @@
+name: CI Build
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!develop'
+      - '!main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Refs:
+      # https://stackoverflow.com/questions/67062308/getting-yn0028-the-lockfile-would-have-been-modified-by-this-install-which-is-e
+      - name: Install packages
+        run: |
+          yarn set version 3.2.1
+          CI=true; YARN_ENABLE_IMMUTABLE_INSTALLS=false; yarn install
+
+      - name: Run tests
+        run: |
+          yarn db:generate
+          yarn test
+
+      - name: Notify status to Discord channel
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+        if: failure()
