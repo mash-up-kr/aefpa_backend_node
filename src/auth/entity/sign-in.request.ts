@@ -1,4 +1,4 @@
-import { IsEmail, Length } from 'class-validator';
+import { IsEmail, Length } from '@/validation';
 
 export class SignInRequest {
   @IsEmail()

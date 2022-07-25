@@ -3,9 +3,9 @@ import { ImageService } from '@/image/image.service';
 import { CreateLogDto } from '@/log/dto/create-log.dto';
 import { LogDto } from '@/log/dto/log.dto';
 import { UpdateLogDto } from '@/log/dto/update-log.dto';
+import { LogWithImages } from '@/log/log.types';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
-import { LogWithImages } from '@/log/log.types';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
@@ -66,7 +66,7 @@ export class LogService {
       },
     });
 
-    const checkedLog = checkExists(foundLog);
+    const checkedLog = checkExists(foundLog, 'log');
 
     return LogDto.fromLogIncludeImages(checkedLog);
   }
@@ -142,7 +142,7 @@ export class LogService {
       },
     });
 
-    const checkedLog = checkExists(foundLog);
+    const checkedLog = checkExists(foundLog, 'log');
 
     if (user.id !== checkedLog.userId) {
       throw new UnauthorizedException('해당 유저는 접근할 수 없는 리소스입니다.');

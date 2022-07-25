@@ -1,22 +1,21 @@
 import { ErrorMessages } from '@/common/error-messages';
-import { registerDecorator, ValidationOptions } from 'class-validator';
+import { registerDecorator } from '@/validation';
 
 const specialCharacterRegex = /[~`!@#$%\^&*\(\)_+\-=\[\]{};':"\\|,.<>\/?]/;
 
-export function NoSpecialCharacter(options?: ValidationOptions) {
+export function NoSpecialCharacter(context?: string) {
   return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'NoSpecialCharacter',
       target: object.constructor,
       propertyName,
-      options: options,
       constraints: [],
       validator: {
         validate(text: string) {
           return !specialCharacterRegex.test(text);
         },
         defaultMessage() {
-          return ErrorMessages.invalidFormat();
+          return ErrorMessages.invalidFormat(context);
         },
       },
     });

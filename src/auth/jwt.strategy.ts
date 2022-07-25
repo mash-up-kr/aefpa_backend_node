@@ -21,6 +21,8 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy, 'jwt') {
    * -> payload에 있는 email 정보로 유저 정보를 찾아서 내려주는 것 뿐
    */
   async validate(payload: JwtPayload): Promise<UserWithoutPassword> {
-    return userWithoutPassword(checkExists(await this.userService.findUserByEmail(payload.email)));
+    return userWithoutPassword(
+      checkExists(await this.userService.findUserByEmail(payload.email), 'email'),
+    );
   }
 }

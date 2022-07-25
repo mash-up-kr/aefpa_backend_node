@@ -1,11 +1,10 @@
 import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
-import { ErrorMessages } from '@/common/error-messages';
+import { IsString, Length } from '@/validation';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, Length } from 'class-validator';
 
 export class AuthCodeConfirmRequest extends AuthCodeRequest {
-  @IsString({ message: ErrorMessages.invalidFormat() })
-  @Length(6, 6, { message: ErrorMessages.invalidFormat() })
+  @IsString()
+  @Length(6, 6)
   @ApiProperty({ description: '인증 코드' })
   code: string;
 }

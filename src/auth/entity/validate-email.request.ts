@@ -1,11 +1,8 @@
-import { ErrorMessages } from '@/common/error-messages';
+import { IsEmail } from '@/validation';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail } from 'class-validator';
 
 export class ValidateEmailRequest {
-  @IsEmail(undefined, {
-    message: ErrorMessages.invalidFormat(),
-  })
+  @IsEmail()
   @ApiProperty({ description: '이메일' })
   email: string;
 }
