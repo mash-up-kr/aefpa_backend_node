@@ -7,6 +7,9 @@ import { LogWithImages } from '@/log/log.types';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { CursorPaginationRequestDto } from '@/common/dto/pagination-request.dto';
+import { CursorPaginationLogResponseDto } from '@/log/dto/cursor-pagination-log-response.dto';
+import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
 
 @Injectable()
 export class LogService {
@@ -42,17 +45,30 @@ export class LogService {
     return LogDto.fromLogIncludeImages(log);
   }
 
-  async findAll(user: UserWithoutPassword): Promise<LogDto[]> {
-    const foundLogs = await this.prismaService.log.findMany({
-      include: {
-        images: true,
-      },
-      where: {
-        userId: user.id,
-      },
-    });
+  async findAll(
+    cursorPaginationRequestDto: CursorPaginationRequestDto,
+    user: UserWithoutPassword,
+  ): Promise<LogDto[] | CursorPaginationLogResponseDto> {
+    const { pageSize, endCursor } = cursorPaginationRequestDto;
 
-    return foundLogs.map((foundLog) => LogDto.fromLogIncludeImages(foundLog));
+    // find all without cursor pagination
+    if (!pageSize) {
+      const foundLogs = await this.prismaService.log.findMany({
+        include: {
+          images: true,
+        },
+        where: {
+          userId: user.id,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      return foundLogs.map((foundLog) => LogDto.fromLogIncludeImages(foundLog));
+    }
+
+    return await this.findAllByCursorPagination(user, pageSize, endCursor);
   }
 
   async findById(id: number): Promise<LogDto> {
@@ -149,5 +165,99 @@ export class LogService {
     }
 
     return checkedLog;
+  }
+
+  // find all by cursor pagination
+  private async findAllByCursorPagination(
+    user: UserWithoutPassword,
+    pageSize: number,
+    endCursor?: string,
+  ) {
+    // first page
+    if (!endCursor) {
+      const foundLogs = await this.prismaService.log.findMany({
+        take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나더 조회
+        include: {
+          images: true,
+        },
+        where: {
+          userId: user.id,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      });
+
+      // get hasNextPage
+      let hasNextPage = false;
+
+      if (pageSize + 1 === foundLogs.length) {
+        hasNextPage = true;
+        foundLogs.pop(); // 다음 페이지 존재하면 pop
+      }
+
+      // get has totalCount
+      const totalCount = await this.prismaService.log.count({
+        where: {
+          userId: user.id,
+        },
+      });
+
+      //get endCursor
+      const endCursor =
+        foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].id) : null;
+
+      return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, {
+        pageSize,
+        hasNextPage,
+        endCursor,
+        totalCount,
+      });
+    }
+
+    //  after second page...
+    const decodedEndCursor = decodeCursor('number', endCursor) as number;
+
+    const foundLogs = await this.prismaService.log.findMany({
+      take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나 더 조회
+      include: {
+        images: true,
+      },
+      where: {
+        userId: user.id,
+        id: {
+          lt: decodedEndCursor,
+        },
+      },
+      orderBy: {
+        id: 'desc',
+      },
+    });
+
+    // get hasNextPage
+    let hasNextPage = false;
+
+    if (pageSize + 1 === foundLogs.length) {
+      hasNextPage = true;
+      foundLogs.pop(); // 다음 페이지 존재하면 pop
+    }
+
+    // get has totalCount
+    const totalCount = await this.prismaService.log.count({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    //get endCursor
+    const endCursorResult =
+      foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].id) : null;
+
+    return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, {
+      pageSize,
+      hasNextPage,
+      endCursor: endCursorResult,
+      totalCount,
+    });
   }
 }

@@ -17,10 +17,12 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFiles,
   UseGuards,
 } from '@nestjs/common';
+import { CursorPaginationRequestDto } from '@/common/dto/pagination-request.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('끼록 > 로그')
@@ -40,8 +42,11 @@ export class LogController {
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@User() user: UserWithoutPassword) {
-    return await this.logService.findAll(user);
+  async findAll(
+    @Query() cursorPaginationRequestDto: CursorPaginationRequestDto,
+    @User() user: UserWithoutPassword,
+  ) {
+    return await this.logService.findAll(cursorPaginationRequestDto, user);
   }
 
   @ApiOperation({ summary: '로그 하나 조회' })
