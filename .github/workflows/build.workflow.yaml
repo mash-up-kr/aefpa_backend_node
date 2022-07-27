@@ -25,9 +25,3 @@ jobs:
         run: |
           yarn db:generate
           yarn test
-
-      - name: Notify status to Discord channel
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-        if: failure()
