@@ -43,6 +43,9 @@ export class AuthService {
     }
 
     const user = await this.prismaService.user.create({
+      include: {
+        userCharacter: true,
+      },
       data: {
         email,
         password: await this.hashPassword.hash(password),
@@ -63,6 +66,7 @@ export class AuthService {
 
     return {
       user: userWithoutPassword(user),
+      character: user.userCharacter!.characterType,
       token,
     };
   }
