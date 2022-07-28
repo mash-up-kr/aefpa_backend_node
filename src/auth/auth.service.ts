@@ -2,6 +2,7 @@ import { AuthCodeType } from '@/auth/auth.types';
 import { SignUpRequest } from '@/auth/dto/sign-up.request';
 import { HashPassword } from '@/auth/hash-password';
 import { JwtPayload } from '@/auth/jwt.types';
+import { RandomCharacterService } from '@/character/random.character.service';
 import { ErrorMessages } from '@/common/error-messages';
 import { checkExists, checkNotExists } from '@/common/error-util';
 import { RandomService } from '@/common/random.service';
@@ -21,6 +22,7 @@ export class AuthService {
     private hashPassword: HashPassword,
     private prismaService: PrismaService,
     private randomService: RandomService,
+    private randomCharacterService: RandomCharacterService,
     private mailerService: MailerService,
   ) {}
 
@@ -47,6 +49,11 @@ export class AuthService {
         userProfile: {
           create: {
             nickname,
+          },
+        },
+        userCharacter: {
+          create: {
+            characterType: this.randomCharacterService.getRandomCharacter(),
           },
         },
       },
