@@ -23,16 +23,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
-import { LogDto } from '@/log/dto/log.dto';
 import { LogResponseDto } from '@/log/dto/response/log-response.dto';
 
 @ApiTags('끼록 > 로그')
