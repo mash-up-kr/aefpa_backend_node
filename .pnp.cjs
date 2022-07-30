@@ -56,6 +56,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/passport", "npm:0.4.7"],\
             ["@types/passport-jwt", "npm:3.0.6"],\
             ["@types/passport-local", "npm:1.0.34"],\
+            ["@types/source-map-support", "npm:0.5.4"],\
             ["@types/supertest", "npm:2.0.12"],\
             ["@typescript-eslint/eslint-plugin", "virtual:14d2fde67d0d52f63867636027a6433e778415f89cbd4d2d728c9155ba0c9bc1848f0baf661e62ec0c32d5a99acf9278f7b235ce47c36e9c9cf4f0871a3904bb#npm:5.29.0"],\
             ["@typescript-eslint/parser", "virtual:14d2fde67d0d52f63867636027a6433e778415f89cbd4d2d728c9155ba0c9bc1848f0baf661e62ec0c32d5a99acf9278f7b235ce47c36e9c9cf4f0871a3904bb#npm:5.29.0"],\
@@ -2530,6 +2531,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/serve-static", "npm:1.13.10"],\
             ["@types/mime", "npm:1.3.2"],\
             ["@types/node", "npm:16.11.41"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@types/source-map-support", [\
+        ["npm:0.5.4", {\
+          "packageLocation": "./.yarn/cache/@types-source-map-support-npm-0.5.4-1c4eb2be20-160ff77e8a.zip/node_modules/@types/source-map-support/",\
+          "packageDependencies": [\
+            ["@types/source-map-support", "npm:0.5.4"],\
+            ["source-map", "npm:0.6.1"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -7924,6 +7935,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/passport", "npm:0.4.7"],\
             ["@types/passport-jwt", "npm:3.0.6"],\
             ["@types/passport-local", "npm:1.0.34"],\
+            ["@types/source-map-support", "npm:0.5.4"],\
             ["@types/supertest", "npm:2.0.12"],\
             ["@typescript-eslint/eslint-plugin", "virtual:14d2fde67d0d52f63867636027a6433e778415f89cbd4d2d728c9155ba0c9bc1848f0baf661e62ec0c32d5a99acf9278f7b235ce47c36e9c9cf4f0871a3904bb#npm:5.29.0"],\
             ["@typescript-eslint/parser", "virtual:14d2fde67d0d52f63867636027a6433e778415f89cbd4d2d728c9155ba0c9bc1848f0baf661e62ec0c32d5a99acf9278f7b235ce47c36e9c9cf4f0871a3904bb#npm:5.29.0"],\
