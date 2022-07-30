@@ -1,4 +1,4 @@
-import { CursorPaginationResponseDto } from '@/common/dto/pagination-response.dto';
+import { CursorPaginationResponseDto } from '@/common/dto/response/pagination-response.dto';
 import { LogDto } from '@/log/dto/log.dto';
 import { LogWithImages } from '@/log/log.types';
 import { customPlainToInstance } from '@/util/plain-to-instance';

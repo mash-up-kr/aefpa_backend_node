@@ -7,7 +7,7 @@ import { LogWithImages } from '@/log/log.types';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { CursorPaginationRequestDto } from '@/common/dto/pagination-request.dto';
+import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { CursorPaginationLogResponseDto } from '@/log/dto/cursor-pagination-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
 

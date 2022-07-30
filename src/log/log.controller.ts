@@ -22,7 +22,7 @@ import {
   UploadedFiles,
   UseGuards,
 } from '@nestjs/common';
-import { CursorPaginationRequestDto } from '@/common/dto/pagination-request.dto';
+import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('끼록 > 로그')
