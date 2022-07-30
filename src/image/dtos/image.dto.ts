@@ -1,11 +1,18 @@
 import { customPlainToInstance } from '@/util/plain-to-instance';
+import { IsString } from '@/validation';
 
-export class ImageResponseDto {
+export class ImageDto {
+  @IsString()
   original: string;
+
+  @IsString()
   w1024: string;
+
+  @IsString()
   w256: string;
 
-  static fromOriginalImage(original: string): ImageResponseDto {
+  // from original image to original, w256, w1024
+  static fromOriginalImage(original: string): ImageDto {
     const originalNameArr = original.split('/');
 
     const w1024 = originalNameArr
@@ -26,7 +33,7 @@ export class ImageResponseDto {
       })
       .join('/');
 
-    return customPlainToInstance(ImageResponseDto, {
+    return customPlainToInstance(ImageDto, {
       original,
       w1024,
       w256,

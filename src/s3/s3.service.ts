@@ -1,4 +1,4 @@
-import { ImageResponseDto } from '@/image/dtos/response/image-response.dto';
+import { ImageDto } from '@/image/dtos/image.dto';
 import { BucketFolderType } from '@/s3/s3.type';
 import { getCurrentDateAS } from '@/util/time';
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
@@ -46,7 +46,7 @@ export class S3Service {
       Logger.debug('image upload success');
 
       return uploadedImages.map((uploadedImage) =>
-        ImageResponseDto.fromOriginalImage(uploadedImage.Location),
+        ImageDto.fromOriginalImage(uploadedImage.Location),
       );
     } catch (err) {
       Logger.error(err);

@@ -2,8 +2,8 @@ import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { ApiImages } from '@/common/decorators/file.decorator';
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
-import { CreateLogDto } from '@/log/dto/create-log.dto';
-import { UpdateLogDto } from '@/log/dto/update-log.dto';
+import { CreateLogDto } from '@/log/dto/request/create-log.dto';
+import { UpdateLogDto } from '@/log/dto/request/update-log.dto';
 import { LogService } from '@/log/log.service';
 import { S3Service } from '@/s3/s3.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
@@ -23,7 +23,17 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
+import { LogDto } from '@/log/dto/log.dto';
+import { LogResponseDto } from '@/log/dto/response/log-response.dto';
 
 @ApiTags('끼록 > 로그')
 @Controller('logs')
@@ -40,6 +50,10 @@ export class LogController {
 
   @ApiOperation({ summary: '로그 목록 조회(페이지네이션)' })
   @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: CursorPaginationLogResponseDto,
+  })
   @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(
@@ -51,6 +65,10 @@ export class LogController {
 
   @ApiOperation({ summary: '로그 하나 조회' })
   @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: LogResponseDto,
+  })
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {

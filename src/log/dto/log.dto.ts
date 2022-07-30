@@ -1,17 +1,27 @@
 import { Log } from '@/api/server/generated';
+import { ImageDto } from '@/image/dtos/image.dto';
 import { LogWithImages } from '@/log/log.types';
 import { encodeCursor } from '@/util/cursor-paginate';
 import { customPlainToInstance } from '@/util/plain-to-instance';
-import { ArrayMinSize, IsNumber, IsOptional, IsString, MaxLength } from '@/validation';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateNested,
+} from '@/validation';
 import * as moment from 'moment';
 
 export class LogDto {
   @IsNumber()
   id: number;
 
-  @IsString({ each: true })
+  @IsArray()
+  @ValidateNested({ each: true })
   @ArrayMinSize(1)
-  imageUrls: string[];
+  images: ImageDto[];
 
   @IsString()
   createdAt: string;
@@ -40,7 +50,13 @@ export class LogDto {
     if (cursorColumn) {
       return customPlainToInstance(LogDto, {
         id,
-        imageUrls: images.map((image) => image.url),
+        images: images.map((image) =>
+          customPlainToInstance(ImageDto, {
+            original: image.original,
+            w256: image.w_256,
+            w1024: image.w_1024,
+          }),
+        ),
         createdAt: moment(createdAt).format(),
         updatedAt: moment(updatedAt).format(),
         title,
@@ -52,7 +68,13 @@ export class LogDto {
 
     return customPlainToInstance(LogDto, {
       id,
-      imageUrls: images.map((image) => image.url),
+      images: images.map((image) =>
+        customPlainToInstance(ImageDto, {
+          original: image.original,
+          w256: image.w_256,
+          w1024: image.w_1024,
+        }),
+      ),
       createdAt: moment(createdAt).format(),
       updatedAt: moment(updatedAt).format(),
       title,
