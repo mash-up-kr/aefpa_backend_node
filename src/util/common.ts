@@ -9,3 +9,14 @@ export function runOrDefault<T, U>(
 ): U {
   return value ? mapper(value) : defaultValue;
 }
+
+/**
+ * Zip two arrays together.
+ */
+export function zip<T, U>(a: T[], b: U[]) {
+  const result: [T, U][] = [];
+  for (let i = 0; i < a.length; i++) {
+    result.push([a[i], b[i]]);
+  }
+  return result;
+}
