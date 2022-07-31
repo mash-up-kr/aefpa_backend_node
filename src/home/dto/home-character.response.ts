@@ -2,7 +2,7 @@ import { CharacterType } from '@/api/server/generated';
 
 type CharacterStatus = 'happy' | 'sad';
 
-export interface LogStatus {
+export interface LogStats {
   level: number; // 캐릭터 레벨
   progress: number; // 진행도의 현재 값
   max: number; // 진행도의 max 값
@@ -11,7 +11,7 @@ export interface LogStatus {
 }
 
 export class HomeCharacterResponse {
-  logStatus: LogStatus;
+  logStats: LogStats;
   nickname: string; // 유저 닉네임
   type: CharacterType;
   status: CharacterStatus;
