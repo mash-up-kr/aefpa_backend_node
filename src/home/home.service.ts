@@ -1,5 +1,6 @@
 import { CharacterType } from '@/api/server/generated';
 import { RandomCharacterService } from '@/character/random.character.service';
+import { CharacterService } from '@/home/character.service';
 import { CharacterStatus } from '@/home/character.types';
 import { HomeCharacterResponse } from '@/home/dto/home-character.response';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -13,12 +14,18 @@ export class HomeService {
   constructor(
     private s3Service: S3Service,
     private prismaService: PrismaService,
+    private characterService: CharacterService,
     private randomCharacterService: RandomCharacterService,
   ) {}
 
   async getCharacterStatus(userId: number): Promise<HomeCharacterResponse> {
     const character = await this.getOrCreateCharacter(userId);
     const type = character.characterType;
+
+    const profile = await this.prismaService.userProfile.findUnique({
+      where: { id: userId },
+    });
+
     const mostRecentLog = await this.getMostRecentLog(userId);
     const lastFeedAt = mostRecentLog?.createdAt;
     const status =
@@ -28,7 +35,7 @@ export class HomeService {
 
     return {
       logStatus: await this.getLogStatus(userId),
-      nickname: '',
+      nickname: profile?.nickname ?? '',
       type,
       status,
       lastFeedAt: lastFeedAt?.toISOString() ?? null,
