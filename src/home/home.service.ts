@@ -64,8 +64,8 @@ export class HomeService {
       where: { userId },
     });
 
-    const start = moment().utc().startOf('day');
-    const end = moment(start).utc().add(1, 'day');
+    const start = moment().utcOffset('+0900').startOf('day');
+    const end = moment(start).utcOffset('+0900').add(1, 'day');
     const numberOfLogsToday = await this.prismaService.log.count({
       where: {
         userId,
