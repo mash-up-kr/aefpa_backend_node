@@ -69,7 +69,7 @@ export class HomeService {
     const numberOfLogsToday = await this.prismaService.log.count({
       where: {
         userId,
-        updatedAt: {
+        createdAt: {
           gte: start.toDate(),
           lt: end.toDate(),
         },
