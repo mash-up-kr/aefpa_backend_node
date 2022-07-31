@@ -12,12 +12,14 @@ export class S3Service {
   private secretAccessKey?: string;
   private region?: string;
   private bucket: any;
+  private baseUrl: string;
 
   constructor(private readonly configService: ConfigService) {
     this.accessKey = this.configService.get('aws.accessKey');
     this.secretAccessKey = this.configService.get('aws.secretAccessKey');
     this.region = this.configService.get('aws.region');
     this.bucket = this.configService.get('aws.s3.bucket');
+    this.baseUrl = `https://${this.bucket}.s3.${this.region}.amazonaws.com`;
 
     this.s3 = new AWS.S3({
       accessKeyId: this.accessKey,
@@ -54,5 +56,10 @@ export class S3Service {
   // example: 20220712-bb5dc8842ca31d4603d6aa11448d1654
   private generateFileName() {
     return getCurrentDateAS('yyyyMMDD').concat('-').concat(crypto.randomBytes(20).toString('hex'));
+  }
+
+  getUrl(key: string) {
+    key.startsWith('/') && (key = key.substring(1));
+    return `${this.baseUrl}/${key}`;
   }
 }

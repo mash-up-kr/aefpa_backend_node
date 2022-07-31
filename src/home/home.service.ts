@@ -1,6 +1,9 @@
+import { CharacterType } from '@/api/server/generated';
 import { RandomCharacterService } from '@/character/random.character.service';
+import { CharacterStatus } from '@/home/character.types';
 import { HomeCharacterResponse } from '@/home/dto/home-character.response';
 import { PrismaService } from '@/prisma/prisma.service';
+import { S3Service } from '@/s3/s3.service';
 import { zip } from '@/util/common';
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
@@ -8,6 +11,7 @@ import * as moment from 'moment';
 @Injectable()
 export class HomeService {
   constructor(
+    private s3Service: S3Service,
     private prismaService: PrismaService,
     private randomCharacterService: RandomCharacterService,
   ) {}
@@ -17,19 +21,19 @@ export class HomeService {
     const type = character.characterType;
     const mostRecentLog = await this.getMostRecentLog(userId);
     const lastFeedAt = mostRecentLog?.createdAt;
+    const status =
+      lastFeedAt != null && moment.duration(moment().diff(lastFeedAt)).asHours() < 4
+        ? 'happy'
+        : 'sad';
 
     return {
       logStatus: await this.getLogStatus(userId),
+      nickname: '',
       type,
+      status,
       lastFeedAt: lastFeedAt?.toISOString() ?? null,
-      status:
-        lastFeedAt != null && moment.duration(moment().diff(lastFeedAt)).asHours() < 4
-          ? 'happy'
-          : 'sad',
-      // TODO: Implementation
-      imageUrl: '',
-      name: '',
-      phrase: '',
+      imageUrl: this.getCharacterImageUrl(type),
+      phrase: this.getPhrase(type, status),
     };
   }
 
@@ -105,5 +109,20 @@ export class HomeService {
       progress: 0,
       total: numberOfLogs,
     };
+  }
+
+  private getCharacterImageUrl(type: CharacterType) {
+    return this.s3Service.getUrl(`static/character/${type.toLowerCase()}.png`);
+  }
+
+  private getPhrase(type: CharacterType, status: CharacterStatus) {
+    switch (type) {
+      case 'GREEN_ONION':
+        return status === 'happy' ? '아, 든든하게 잘 먹었어요~' : '해가 중천인데 배 안고파요?';
+      case 'CARROT':
+        return status === 'happy' ? '오늘도 에너지 충전! 감사해요' : '혹시 배는 언제 고파질까요..?';
+      case 'BROCCOLI':
+        return status === 'happy' ? 'A-Yo! 밥 먹었더니 신난다!' : 'Hey~ 밥먹고 합시다!! 배고파~';
+    }
   }
 }

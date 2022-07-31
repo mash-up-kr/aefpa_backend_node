@@ -12,12 +12,12 @@ export interface LogStatus {
 
 export class HomeCharacterResponse {
   logStatus: LogStatus;
+  nickname: string; // 유저 닉네임
   type: CharacterType;
   status: CharacterStatus;
   lastFeedAt: string | null; // ISO 8601 string (YYYY-MM-DDTHH:mm:ss.sssZ)
 
   // 상태에 따른 처리를 서버에서 할 경우
   imageUrl: string;
-  name: string; // 캐릭터 이름
   phrase: string; // 캐릭터 문구
 }
