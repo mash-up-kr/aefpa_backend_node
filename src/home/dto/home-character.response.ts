@@ -1,6 +1,5 @@
 import { CharacterType } from '@/api/server/generated';
-
-type CharacterStatus = 'happy' | 'sad';
+import { CharacterStatus } from '@/home/character.types';
 
 export interface LogStats {
   level: number; // 캐릭터 레벨
