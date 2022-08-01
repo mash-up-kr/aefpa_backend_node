@@ -27,7 +27,7 @@ export class HomeService {
 
     return {
       logStats: await this.getLogStats(userId),
-      nickname: profile?.nickname ?? '',
+      name: profile?.nickname ?? '',
       type,
       status,
       lastFeedAt: lastFeedAt?.toISOString() ?? null,

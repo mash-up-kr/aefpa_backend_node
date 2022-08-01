@@ -11,7 +11,7 @@ export interface LogStats {
 
 export class HomeCharacterResponse {
   logStats: LogStats;
-  nickname: string; // 유저 닉네임
+  name: string;
   type: CharacterType;
   status: CharacterStatus;
   lastFeedAt: string | null; // ISO 8601 string (YYYY-MM-DDTHH:mm:ss.sssZ)
