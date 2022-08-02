@@ -22,6 +22,18 @@ model User {
   userCharacter UserCharacter?
   userCode      UserCode[]
   logs          Log[]
+  followedBy    Follows[]      @relation("following")
+  following     Follows[]      @relation("follower")
+}
+
+model Follows {
+  follower    User     @relation("follower", fields: [followerId], references: [id])
+  followerId  Int
+  following   User     @relation("following", fields: [followingId], references: [id])
+  followingId Int
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
 }
 
 model UserProfile {
