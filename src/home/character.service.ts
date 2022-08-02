@@ -10,6 +10,21 @@ import * as moment from 'moment';
  */
 @Injectable()
 export class CharacterService {
+  private phrases: Record<CharacterType, Record<CharacterStatus, string>> = {
+    GREEN_ONION: {
+      happy: '아, 든든하게 잘 먹었어요~',
+      sad: '해가 중천인데 배 안고파요?',
+    },
+    CARROT: {
+      happy: '오늘도 에너지 충전! 감사해요',
+      sad: '혹시 배는 언제 고파질까요..?',
+    },
+    BROCCOLI: {
+      happy: 'A-Yo! 밥 먹었더니 신난다!',
+      sad: 'Hey~ 밥먹고 합시다!! 배고파~',
+    },
+  };
+
   constructor(private s3Service: S3Service) {}
 
   characterStatus(lastFeedAt?: Date, current?: Date): CharacterStatus {
@@ -51,13 +66,6 @@ export class CharacterService {
   }
 
   getPhrase(type: CharacterType, status: CharacterStatus) {
-    switch (type) {
-      case 'GREEN_ONION':
-        return status === 'happy' ? '아, 든든하게 잘 먹었어요~' : '해가 중천인데 배 안고파요?';
-      case 'CARROT':
-        return status === 'happy' ? '오늘도 에너지 충전! 감사해요' : '혹시 배는 언제 고파질까요..?';
-      case 'BROCCOLI':
-        return status === 'happy' ? 'A-Yo! 밥 먹었더니 신난다!' : 'Hey~ 밥먹고 합시다!! 배고파~';
-    }
+    return this.phrases[type][status];
   }
 }
