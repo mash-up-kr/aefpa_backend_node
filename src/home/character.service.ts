@@ -61,8 +61,8 @@ export class CharacterService {
     };
   }
 
-  getCharacterImageUrl(type: CharacterType) {
-    return this.s3Service.getUrl(`static/character/${type.toLowerCase()}.png`);
+  getCharacterImageUrl(type: CharacterType, size: 'mini' | 'full' = 'mini') {
+    return this.s3Service.getUrl(`static/character/${size}/${type.toLowerCase()}.png`);
   }
 
   getPhrase(type: CharacterType, status: CharacterStatus) {
