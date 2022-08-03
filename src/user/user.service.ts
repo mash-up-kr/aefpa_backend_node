@@ -1,9 +1,10 @@
-import { CharacterType, Follows } from '@/api/server/generated';
+import { CharacterType, Follows, Prisma } from '@/api/server/generated';
 import { CharacterService } from '@/character/character.service';
 import { checkExists } from '@/common/error-util';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithFollowingResponse } from '@/user/entity/user-with-following.response';
 import { UserEntity } from '@/user/entity/user.entity';
+import { FriendType } from '@/user/user.types';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -84,5 +85,46 @@ export class UserService {
       name: following.userProfile!.nickname,
       imageUrl: this.characterService.getCharacterImageUrl(following.userCharacter!.characterType),
     };
+  }
+
+  async getFriendsList(
+    userId: number,
+    type: FriendType,
+    keyword?: string,
+  ): Promise<UserWithFollowingResponse[]> {
+    const userWhere: Prisma.UserWhereInput = {};
+
+    if (keyword != null) {
+      keyword = keyword.trim();
+
+      const found = await this.prismaService.userProfile.findUnique({
+        select: { userId: true },
+        where: { nickname: keyword },
+      });
+
+      if (!found) return [];
+
+      userWhere.id = found.userId;
+    } else {
+      userWhere.followedBy = type === 'following' ? { some: { followerId: userId } } : undefined;
+      userWhere.following = type === 'follower' ? { some: { followingId: userId } } : undefined;
+    }
+
+    const users = await this.prismaService.user.findMany({
+      where: userWhere,
+      select: {
+        id: true,
+        userProfile: { select: { nickname: true } },
+        userCharacter: { select: { characterType: true } },
+        followedBy: { select: { followerId: true } },
+      },
+    });
+
+    return users.map((item) => {
+      return {
+        ...this.mapUser(item),
+        following: item.followedBy.map((item) => item.followerId).includes(userId),
+      };
+    });
   }
 }

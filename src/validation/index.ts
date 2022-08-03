@@ -14,7 +14,7 @@ export function IsEmail(context = '$property') {
   return _.IsEmail(undefined, { message: ErrorMessages.invalidFormat(context) });
 }
 
-export function IsIn(values: readonly any[], context = '$property') {
+export function IsIn(values: readonly any[], context = '$property. Allowed values: $constraint1') {
   return _.IsIn(values, {
     message: ErrorMessages.invalidFormat(context),
   });
