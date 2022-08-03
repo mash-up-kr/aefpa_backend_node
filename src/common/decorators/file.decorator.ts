@@ -10,6 +10,9 @@ export function ApiImages(
   maxCount = 10,
   localOptions: MulterOptions = {
     fileFilter: imageFileFilter,
+    limits: {
+      fileSize: 1048576, // 10 M
+    },
   },
 ) {
   return applyDecorators(

@@ -1,5 +1,6 @@
 import { Image } from '@/api/server/generated';
 import { checkExists } from '@/common/error-util';
+import { ImageDto } from '@/image/dtos/image.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
@@ -7,10 +8,14 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 export class ImageService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(url: string, logId: number) {
+  async create(imageDto: ImageDto, logId: number) {
+    const { original, w256, w1024 } = imageDto;
+
     return await this.prismaService.image.create({
       data: {
-        url,
+        original,
+        w_256: w256,
+        w_1024: w1024,
         log: {
           connect: {
             id: logId,
