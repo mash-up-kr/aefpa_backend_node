@@ -2,10 +2,10 @@ import { CharacterService } from '@/character/character.service';
 import { RandomCharacterService } from '@/character/random.character.service';
 import { HomeCharacterResponse } from '@/home/dto/home-character.response';
 import { HomeFriendsResponse } from '@/home/dto/home-friends.response';
+import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserService } from '@/user/user.service';
 import { Injectable } from '@nestjs/common';
-import * as moment from 'moment';
 
 @Injectable()
 export class HomeService {
@@ -14,6 +14,7 @@ export class HomeService {
     private userService: UserService,
     private characterService: CharacterService,
     private randomCharacterService: RandomCharacterService,
+    private logStatsService: LogStatsService,
   ) {}
 
   async getCharacterStatus(userId: number): Promise<HomeCharacterResponse> {
@@ -31,7 +32,7 @@ export class HomeService {
     const status = this.characterService.characterStatus(lastFeedAt);
 
     return {
-      logStats: await this.getLogStats(userId),
+      logStats: await this.logStatsService.getLogStats(userId),
       name: profile?.nickname ?? '',
       type,
       status,
@@ -62,29 +63,6 @@ export class HomeService {
         orderBy: { updatedAt: 'desc' },
       })) ?? null
     );
-  }
-
-  private async getLogStats(userId: number) {
-    const numberOfLogsTotal = await this.prismaService.log.count({
-      where: { userId },
-    });
-
-    const start = moment().utcOffset('+0900').startOf('day');
-    const end = moment(start).utcOffset('+0900').add(1, 'day');
-    const numberOfLogsToday = await this.prismaService.log.count({
-      where: {
-        userId,
-        createdAt: {
-          gte: start.toDate(),
-          lt: end.toDate(),
-        },
-      },
-    });
-
-    return {
-      ...this.characterService.calculateLogStats(numberOfLogsTotal),
-      today: numberOfLogsToday,
-    };
   }
 
   /**

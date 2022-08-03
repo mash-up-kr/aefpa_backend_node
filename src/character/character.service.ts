@@ -1,7 +1,6 @@
 import { CharacterType } from '@/api/server/generated';
 import { CharacterStatus } from '@/character/character.types';
 import { S3Service } from '@/s3/s3.service';
-import { zip } from '@/util/common';
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 
@@ -31,34 +30,6 @@ export class CharacterService {
     return lastFeedAt != null && moment.duration(moment(current).diff(lastFeedAt)).asHours() < 4
       ? 'happy'
       : 'sad';
-  }
-
-  calculateLogStats(numberOfLogs: number) {
-    const goals = [0, 10, 30];
-    const zipped = zip(goals, [...goals.slice(1), undefined]);
-
-    for (let i = 0; i < zipped.length; i++) {
-      const [prev, next] = zipped[i];
-      if (numberOfLogs >= prev && (next == null || numberOfLogs < next)) {
-        const level = i + 1;
-        const max = next != null ? next - prev : prev;
-        const progress = next != null ? numberOfLogs - prev : prev;
-
-        return {
-          level,
-          max,
-          progress,
-          total: numberOfLogs,
-        };
-      }
-    }
-
-    return {
-      level: 1,
-      max: 10,
-      progress: 0,
-      total: numberOfLogs,
-    };
   }
 
   getCharacterImageUrl(type: CharacterType, size: 'mini' | 'full' = 'mini') {
