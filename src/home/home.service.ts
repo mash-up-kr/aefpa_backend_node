@@ -1,8 +1,6 @@
 import { CharacterService } from '@/character/character.service';
-import { RandomCharacterService } from '@/character/random.character.service';
 import { HomeStatusResponse } from '@/home/dto/home-character.response';
 import { HomeFriendsResponse } from '@/home/dto/home-friends.response';
-import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserService } from '@/user/user.service';
 import { Injectable } from '@nestjs/common';
@@ -13,47 +11,20 @@ export class HomeService {
     private prismaService: PrismaService,
     private userService: UserService,
     private characterService: CharacterService,
-    private randomCharacterService: RandomCharacterService,
-    private logStatsService: LogStatsService,
   ) {}
 
   async getCharacterStatus(userId: number): Promise<HomeStatusResponse> {
-    const character = await this.prismaService.userCharacter.findUnique({
-      where: { userId },
-    });
-    const type = character!.characterType;
-
-    const profile = await this.prismaService.userProfile.findUnique({
-      where: { id: userId },
-    });
-
     const mostRecentLog = await this.getMostRecentLog(userId);
     const lastFeedAt = mostRecentLog?.createdAt;
     const status = this.characterService.characterStatus(lastFeedAt);
+    const profile = await this.userService.getUserProfile(userId);
 
     return {
-      logStats: await this.logStatsService.getLogStats(userId),
-      name: profile?.nickname ?? '',
-      type,
+      ...profile,
       status,
       lastFeedAt: lastFeedAt?.toISOString() ?? null,
-      imageUrl: this.characterService.getCharacterImageUrl(type, 'full'),
-      phrase: this.characterService.getPhrase(type, status),
+      phrase: this.characterService.getPhrase(profile.type, status),
     };
-  }
-
-  private async getOrCreateCharacter(userId: number) {
-    return (
-      (await this.prismaService.userCharacter.findUnique({
-        where: { userId },
-      })) ??
-      (await this.prismaService.userCharacter.create({
-        data: {
-          userId,
-          characterType: this.randomCharacterService.getRandomCharacter(),
-        },
-      }))
-    );
   }
 
   private async getMostRecentLog(userId: number) {

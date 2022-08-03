@@ -4,6 +4,7 @@ import { checkExists } from '@/common/error-util';
 import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserProfileWithFollowsResponse } from '@/user/entity/user-profile-with-follows.response';
+import { UserProfileResponse } from '@/user/entity/user-profile.response';
 import { UserWithFollowingResponse } from '@/user/entity/user-with-following.response';
 import { UserEntity } from '@/user/entity/user.entity';
 import { FriendType } from '@/user/user.types';
@@ -131,7 +132,7 @@ export class UserService {
     });
   }
 
-  async getUserProfile(userId: number): Promise<UserProfileWithFollowsResponse> {
+  async getUserProfile(userId: number): Promise<UserProfileResponse> {
     const found = checkExists(
       await this.prismaService.user.findUnique({
         where: { id: userId },
@@ -142,6 +143,19 @@ export class UserService {
       }),
     );
 
+    const type = found.userCharacter!.characterType;
+
+    return {
+      logStats: await this.logStatsService.getLogStats(userId),
+      name: found.userProfile?.nickname ?? '',
+      type,
+      imageUrl: this.characterService.getCharacterImageUrl(type),
+    };
+  }
+
+  async getUserProfileWithFollows(userId: number): Promise<UserProfileWithFollowsResponse> {
+    const profile = await this.getUserProfile(userId);
+
     const followerCount = await this.prismaService.follows.count({
       where: { followingId: userId },
     });
@@ -150,13 +164,8 @@ export class UserService {
       where: { followerId: userId },
     });
 
-    const type = found.userCharacter!.characterType;
-
     return {
-      logStats: await this.logStatsService.getLogStats(userId),
-      name: found.userProfile?.nickname ?? '',
-      type,
-      imageUrl: this.characterService.getCharacterImageUrl(type),
+      ...profile,
       followerCount,
       followingCount,
     };

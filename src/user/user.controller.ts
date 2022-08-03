@@ -41,6 +41,6 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('')
   async getUserProfile(@User() user: UserWithoutPassword) {
-    return await this.userService.getUserProfile(user.id);
+    return await this.userService.getUserProfileWithFollows(user.id);
   }
 }
