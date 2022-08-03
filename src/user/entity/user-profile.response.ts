@@ -1,8 +1,8 @@
 import { CharacterType } from '@/api/server/generated';
-import { LogStats } from '@/home/dto/home-character.response';
+import { LogStatsResponse } from '@/log/dto/log-stats.response';
 
 export class UserProfileResponse {
-  logStats: LogStats;
+  logStats: LogStatsResponse;
   name: string;
   type: CharacterType;
   imageUrl: string;

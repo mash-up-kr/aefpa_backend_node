@@ -1,16 +1,9 @@
 import { CharacterType } from '@/api/server/generated';
 import { CharacterStatus } from '@/character/character.types';
-
-export interface LogStats {
-  level: number; // 캐릭터 레벨
-  progress: number; // 진행도의 현재 값
-  max: number; // 진행도의 max 값
-  total: number; // 전체 끼록 횟수
-  today?: number; // 오늘 끼록 횟수
-}
+import { LogStatsResponse } from '../../log/dto/log-stats.response';
 
 export class HomeCharacterResponse {
-  logStats: LogStats;
+  logStats: LogStatsResponse;
   name: string;
   type: CharacterType;
   imageUrl: string;
