@@ -1,5 +1,5 @@
 import { CharacterType } from '@/api/server/generated';
-import { CharacterStatus } from '@/home/character.types';
+import { CharacterStatus } from '@/character/character.types';
 import { S3Service } from '@/s3/s3.service';
 import { zip } from '@/util/common';
 import { Injectable } from '@nestjs/common';

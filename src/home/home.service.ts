@@ -1,8 +1,9 @@
+import { CharacterService } from '@/character/character.service';
 import { RandomCharacterService } from '@/character/random.character.service';
-import { CharacterService } from '@/home/character.service';
 import { HomeCharacterResponse } from '@/home/dto/home-character.response';
 import { HomeFriendsResponse } from '@/home/dto/home-friends.response';
 import { PrismaService } from '@/prisma/prisma.service';
+import { UserService } from '@/user/user.service';
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 
@@ -10,6 +11,7 @@ import * as moment from 'moment';
 export class HomeService {
   constructor(
     private prismaService: PrismaService,
+    private userService: UserService,
     private characterService: CharacterService,
     private randomCharacterService: RandomCharacterService,
   ) {}
@@ -106,13 +108,7 @@ export class HomeService {
 
     return {
       users: ret.map((item) => {
-        return {
-          id: item.following.id,
-          name: item.following.userProfile!.nickname,
-          imageUrl: this.characterService.getCharacterImageUrl(
-            item.following.userCharacter!.characterType,
-          ),
-        };
+        return this.userService.mapUser(item.following);
       }),
     };
   }

@@ -2,6 +2,10 @@ import { ErrorMessages } from '@/common/error-messages';
 import * as _ from 'class-validator';
 export * from 'class-validator';
 
+export function IsNumber(options?: _.ValidationOptions, context = '$property') {
+  return _.IsNumber(undefined, { ...options, message: ErrorMessages.invalidFormat(context) });
+}
+
 export function IsString(options?: _.ValidationOptions, context = '$property') {
   return _.IsString({ ...options, message: ErrorMessages.invalidFormat(context) });
 }

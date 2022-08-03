@@ -1,5 +1,5 @@
-import { UserDto } from '@/home/dto/user.dto';
+import { UserResponse } from '@/user/entity/user.dto';
 
 export class HomeFriendsResponse {
-  users: UserDto[];
+  users: UserResponse[];
 }
