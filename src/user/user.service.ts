@@ -149,7 +149,8 @@ export class UserService {
       logStats: await this.logStatsService.getLogStats(userId),
       name: found.userProfile?.nickname ?? '',
       type,
-      imageUrl: this.characterService.getCharacterImageUrl(type),
+      miniImageUrl: this.characterService.getCharacterImageUrl(type, 'mini'),
+      fullImageUrl: this.characterService.getCharacterImageUrl(type, 'full'),
     };
   }
 

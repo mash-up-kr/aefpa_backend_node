@@ -5,5 +5,6 @@ export class UserProfileResponse {
   logStats: LogStatsResponse;
   name: string;
   type: CharacterType;
-  imageUrl: string;
+  fullImageUrl: string;
+  miniImageUrl: string;
 }
