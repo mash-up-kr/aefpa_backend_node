@@ -1,6 +1,6 @@
 import { CharacterService } from '@/character/character.service';
 import { RandomCharacterService } from '@/character/random.character.service';
-import { HomeCharacterResponse } from '@/home/dto/home-character.response';
+import { HomeStatusResponse } from '@/home/dto/home-character.response';
 import { HomeFriendsResponse } from '@/home/dto/home-friends.response';
 import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -17,7 +17,7 @@ export class HomeService {
     private logStatsService: LogStatsService,
   ) {}
 
-  async getCharacterStatus(userId: number): Promise<HomeCharacterResponse> {
+  async getCharacterStatus(userId: number): Promise<HomeStatusResponse> {
     const character = await this.prismaService.userCharacter.findUnique({
       where: { userId },
     });

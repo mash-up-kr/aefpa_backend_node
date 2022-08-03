@@ -6,6 +6,4 @@ export class UserProfileResponse {
   name: string;
   type: CharacterType;
   imageUrl: string;
-  followerCount: number;
-  followingCount: number;
 }

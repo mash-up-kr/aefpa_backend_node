@@ -3,7 +3,7 @@ import { CharacterService } from '@/character/character.service';
 import { checkExists } from '@/common/error-util';
 import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
-import { UserProfileResponse } from '@/user/entity/user-profile.response';
+import { UserProfileWithFollowsResponse } from '@/user/entity/user-profile-with-follows.response';
 import { UserWithFollowingResponse } from '@/user/entity/user-with-following.response';
 import { UserEntity } from '@/user/entity/user.entity';
 import { FriendType } from '@/user/user.types';
@@ -131,7 +131,7 @@ export class UserService {
     });
   }
 
-  async getUserProfile(userId: number): Promise<UserProfileResponse> {
+  async getUserProfile(userId: number): Promise<UserProfileWithFollowsResponse> {
     const found = checkExists(
       await this.prismaService.user.findUnique({
         where: { id: userId },
