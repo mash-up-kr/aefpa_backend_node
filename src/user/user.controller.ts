@@ -35,4 +35,12 @@ export class UserController {
   async friendsList(@User() user: UserWithoutPassword, @Query() request: FriendsListRequest) {
     return await this.userService.getFriendsList(user.id, request.type, request.keyword);
   }
+
+  @ApiOperation({ summary: '유저 정보 조회' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard)
+  @Get('')
+  async getUserProfile(@User() user: UserWithoutPassword) {
+    return await this.userService.getUserProfile(user.id);
+  }
 }

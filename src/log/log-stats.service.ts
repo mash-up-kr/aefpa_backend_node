@@ -1,3 +1,4 @@
+import { LogStats } from '@/home/dto/home-character.response';
 import { PrismaService } from '@/prisma/prisma.service';
 import { zip } from '@/util/common';
 import { Injectable } from '@nestjs/common';
@@ -7,14 +8,16 @@ import * as moment from 'moment';
 export class LogStatsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async getLogStats(userId: number) {
+  async getLogStats(userId: number, includeToday?: boolean): Promise<LogStats> {
     const numberOfLogsTotal = await this.prismaService.log.count({
       where: { userId },
     });
 
+    if (!includeToday) return this.calculateLogStats(numberOfLogsTotal);
+
     const start = moment().utcOffset('+0900').startOf('day');
     const end = moment(start).utcOffset('+0900').add(1, 'day');
-    const numberOfLogsToday = await this.prismaService.log.count({
+    const today = await this.prismaService.log.count({
       where: {
         userId,
         createdAt: {
@@ -26,7 +29,7 @@ export class LogStatsService {
 
     return {
       ...this.calculateLogStats(numberOfLogsTotal),
-      today: numberOfLogsToday,
+      today,
     };
   }
 
