@@ -3,6 +3,7 @@ import { AuthService } from '@/auth/auth.service';
 import { HashPassword } from '@/auth/hash-password';
 import { JwtAuthStrategy } from '@/auth/jwt.strategy';
 import { LocalStrategy } from '@/auth/local.strategy';
+import { RandomCharacterService } from '@/character/random.character.service';
 import { RandomService } from '@/common/random.service';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -30,6 +31,7 @@ import { PassportModule } from '@nestjs/passport';
   ],
   providers: [
     RandomService.withPool(),
+    RandomCharacterService,
     AuthService,
     LocalStrategy,
     JwtAuthStrategy,

@@ -1,5 +1,6 @@
 import { AuthService } from '@/auth/auth.service';
 import { SignUpRequest } from '@/auth/dto/sign-up.request';
+import { SignUpResponse } from '@/auth/dto/sign-up.response';
 import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request';
 import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
@@ -8,6 +9,7 @@ import { ValidateNicknameRequest } from '@/auth/entity/validate-nickname.request
 import { LocalAuthGuard } from '@/auth/local-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
+import { customPlainToInstance } from '@/util/plain-to-instance';
 import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -34,8 +36,8 @@ export class AuthController {
 
   @ApiOperation({ summary: '회원가입' })
   @Post('signup')
-  async signup(@Body() dto: SignUpRequest) {
-    return this.authService.signup(dto);
+  async signup(@Body() dto: SignUpRequest): Promise<SignUpResponse> {
+    return customPlainToInstance(SignUpResponse, await this.authService.signup(dto));
   }
 
   @ApiOperation({ summary: '인증 코드 발송' })
