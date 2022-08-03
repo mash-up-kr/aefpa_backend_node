@@ -4,10 +4,10 @@ import { HomeCharacterResponse } from '@/home/dto/home-character.response';
 import { HomeFriendsResponse } from '@/home/dto/home-friends.response';
 import { HomeService } from '@/home/home.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
-import { customPlainToInstance } from '@/util/plain-to-instance';
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('user')
 @Controller('home')
 export class HomeController {
   constructor(private homeService: HomeService) {}
