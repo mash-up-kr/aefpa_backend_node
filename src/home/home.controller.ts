@@ -19,10 +19,7 @@ export class HomeController {
   @UseGuards(JwtAuthGuard)
   @Get('character/status')
   async getCharacterStatus(@User() user: UserWithoutPassword): Promise<HomeCharacterResponse> {
-    return customPlainToInstance(
-      HomeCharacterResponse,
-      await this.homeService.getCharacterStatus(user.id),
-    );
+    return await this.homeService.getCharacterStatus(user.id);
   }
 
   @ApiOperation({
@@ -32,6 +29,6 @@ export class HomeController {
   @UseGuards(JwtAuthGuard)
   @Get('friends')
   async getFriendsList(@User() user: UserWithoutPassword): Promise<HomeFriendsResponse> {
-    return customPlainToInstance(HomeFriendsResponse, await this.homeService.getFriends(user.id));
+    return await this.homeService.getFriends(user.id);
   }
 }
