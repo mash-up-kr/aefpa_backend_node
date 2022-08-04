@@ -4,7 +4,7 @@ import { FollowRequest } from '@/user/entity/follow.request';
 import { FriendsListRequest } from '@/user/entity/friends-list.request';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { UserService } from '@/user/user.service';
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('user')
@@ -42,5 +42,13 @@ export class UserController {
   @Get('')
   async getUserProfile(@User() user: UserWithoutPassword) {
     return await this.userService.getUserProfileWithFollows(user.id);
+  }
+
+  @ApiOperation({ summary: '유저 삭제' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard)
+  @Delete('')
+  async deleteUser(@User() user: UserWithoutPassword) {
+    return await this.userService.deleteUser(user.id);
   }
 }
