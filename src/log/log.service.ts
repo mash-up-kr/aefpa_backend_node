@@ -10,7 +10,6 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
-import { use } from 'passport';
 
 @Injectable()
 export class LogService {
