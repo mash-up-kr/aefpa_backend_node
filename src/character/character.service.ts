@@ -1,5 +1,5 @@
 import { CharacterType } from '@/api/server/generated';
-import { CharacterStatus } from '@/home/character.types';
+import { CharacterStatus } from '@/character/character.types';
 import { S3Service } from '@/s3/s3.service';
 import { zip } from '@/util/common';
 import { Injectable } from '@nestjs/common';
@@ -61,8 +61,8 @@ export class CharacterService {
     };
   }
 
-  getCharacterImageUrl(type: CharacterType) {
-    return this.s3Service.getUrl(`static/character/${type.toLowerCase()}.png`);
+  getCharacterImageUrl(type: CharacterType, size: 'mini' | 'full' = 'mini') {
+    return this.s3Service.getUrl(`static/character/${size}/${type.toLowerCase()}.png`);
   }
 
   getPhrase(type: CharacterType, status: CharacterStatus) {
