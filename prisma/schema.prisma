@@ -49,14 +49,15 @@ model UserProfile {
 }
 
 model UserCode {
-  id        Int          @id @default(autoincrement())
-  code      String       @db.Char(6)
-  type      UserCodeType
-  expiredAt DateTime
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
+  id          Int          @id @default(autoincrement())
+  code        String       @db.Char(6)
+  type        UserCodeType
+  expiredAt   DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  confirmedAt DateTime?
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
 }
 
 enum UserCodeType {
