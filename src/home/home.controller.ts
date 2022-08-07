@@ -1,37 +1,34 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
-import { HomeCharacterResponse } from '@/home/dto/home-character.response';
+import { HomeStatusResponse } from '@/home/dto/home-character.response';
 import { HomeFriendsResponse } from '@/home/dto/home-friends.response';
 import { HomeService } from '@/home/home.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
-import { customPlainToInstance } from '@/util/plain-to-instance';
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('user')
 @Controller('home')
 export class HomeController {
   constructor(private homeService: HomeService) {}
 
   @ApiOperation({
-    summary: '홈 캐릭터 정보 조회',
+    summary: '홈 상태 정보 조회',
   })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
-  @Get('character/status')
-  async getCharacterStatus(@User() user: UserWithoutPassword): Promise<HomeCharacterResponse> {
-    return customPlainToInstance(
-      HomeCharacterResponse,
-      await this.homeService.getCharacterStatus(user.id),
-    );
+  @Get('status')
+  async getStatus(@User() user: UserWithoutPassword): Promise<HomeStatusResponse> {
+    return await this.homeService.getCharacterStatus(user.id);
   }
 
   @ApiOperation({
-    summary: '친구 목록 조회',
+    summary: '홈 친구 목록 조회',
   })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get('friends')
   async getFriendsList(@User() user: UserWithoutPassword): Promise<HomeFriendsResponse> {
-    return customPlainToInstance(HomeFriendsResponse, await this.homeService.getFriends(user.id));
+    return await this.homeService.getFriends(user.id);
   }
 }

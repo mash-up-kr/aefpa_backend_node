@@ -1,16 +1,20 @@
-import { CharacterType, Follows } from '@/api/server/generated';
+import { CharacterType, Follows, Prisma } from '@/api/server/generated';
 import { CharacterService } from '@/character/character.service';
-import { ErrorMessages } from '@/common/error-messages';
 import { checkExists } from '@/common/error-util';
+import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
+import { UserProfileWithFollowsResponse } from '@/user/entity/user-profile-with-follows.response';
+import { UserProfileResponse } from '@/user/entity/user-profile.response';
 import { UserWithFollowingResponse } from '@/user/entity/user-with-following.response';
 import { UserEntity } from '@/user/entity/user.entity';
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { FriendType } from '@/user/user.types';
+import { ConflictException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly logStatsService: LogStatsService,
     private readonly characterService: CharacterService,
   ) {}
 
@@ -87,5 +91,92 @@ export class UserService {
       name: following.userProfile!.nickname,
       imageUrl: this.characterService.getCharacterImageUrl(following.userCharacter!.characterType),
     };
+  }
+
+  async getFriendsList(
+    userId: number,
+    type: FriendType,
+    keyword?: string,
+  ): Promise<UserWithFollowingResponse[]> {
+    const userWhere: Prisma.UserWhereInput = {};
+
+    if (keyword != null) {
+      keyword = keyword.trim();
+
+      const found = await this.prismaService.userProfile.findUnique({
+        select: { userId: true },
+        where: { nickname: keyword },
+      });
+
+      if (!found) return [];
+
+      userWhere.id = found.userId;
+    } else {
+      userWhere.followedBy = type === 'following' ? { some: { followerId: userId } } : undefined;
+      userWhere.following = type === 'follower' ? { some: { followingId: userId } } : undefined;
+    }
+
+    const users = await this.prismaService.user.findMany({
+      where: userWhere,
+      select: {
+        id: true,
+        userProfile: { select: { nickname: true } },
+        userCharacter: { select: { characterType: true } },
+        followedBy: { select: { followerId: true } },
+      },
+    });
+
+    return users.map((item) => {
+      return {
+        ...this.mapUser(item),
+        following: item.followedBy.map((item) => item.followerId).includes(userId),
+      };
+    });
+  }
+
+  async getUserProfile(userId: number): Promise<UserProfileResponse> {
+    const found = checkExists(
+      await this.prismaService.user.findUnique({
+        where: { id: userId },
+        select: {
+          userCharacter: { select: { characterType: true } },
+          userProfile: { select: { nickname: true } },
+        },
+      }),
+    );
+
+    const type = found.userCharacter!.characterType;
+
+    return {
+      logStats: await this.logStatsService.getLogStats(userId),
+      name: found.userProfile?.nickname ?? '',
+      type,
+      miniImageUrl: this.characterService.getCharacterImageUrl(type, 'mini'),
+      fullImageUrl: this.characterService.getCharacterImageUrl(type, 'full'),
+    };
+  }
+
+  async getUserProfileWithFollows(userId: number): Promise<UserProfileWithFollowsResponse> {
+    const profile = await this.getUserProfile(userId);
+
+    const followerCount = await this.prismaService.follows.count({
+      where: { followingId: userId },
+    });
+
+    const followingCount = await this.prismaService.follows.count({
+      where: { followerId: userId },
+    });
+
+    return {
+      ...profile,
+      followerCount,
+      followingCount,
+    };
+  }
+
+  async deleteUser(userId: number) {
+    return await this.prismaService.user.delete({
+      where: { id: userId },
+    });
   }
 }
