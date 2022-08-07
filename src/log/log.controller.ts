@@ -2,8 +2,8 @@ import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { ApiImages } from '@/common/decorators/file.decorator';
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
-import { CreateLogDto } from '@/log/dto/create-log.dto';
-import { UpdateLogDto } from '@/log/dto/update-log.dto';
+import { CreateLogDto } from '@/log/dto/request/create-log.dto';
+import { UpdateLogDto } from '@/log/dto/request/update-log.dto';
 import { LogService } from '@/log/log.service';
 import { S3Service } from '@/s3/s3.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
@@ -22,15 +22,17 @@ import {
   UploadedFiles,
   UseGuards,
 } from '@nestjs/common';
-import { CursorPaginationRequestDto } from '@/common/dto/pagination-request.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
+import { LogResponseDto } from '@/log/dto/response/log-response.dto';
 
-@ApiTags('끼록 > 로그')
+@ApiTags('끼록 > 간단 끼록')
 @Controller('logs')
 export class LogController {
   constructor(private readonly logService: LogService, private readonly s3Service: S3Service) {}
 
-  @ApiOperation({ summary: '로그 생성' })
+  @ApiOperation({ summary: '간단 끼록 생성' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -38,8 +40,12 @@ export class LogController {
     return await this.logService.create(createLogDto, user);
   }
 
-  @ApiOperation({ summary: '로그 목록 조회(페이지네이션)' })
+  @ApiOperation({ summary: '간단 끼록 목록 조회(페이지네이션)' })
   @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: CursorPaginationLogResponseDto,
+  })
   @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(
@@ -49,15 +55,19 @@ export class LogController {
     return await this.logService.findAll(cursorPaginationRequestDto, user);
   }
 
-  @ApiOperation({ summary: '로그 하나 조회' })
+  @ApiOperation({ summary: '간단 끼록 하나 조회' })
   @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: LogResponseDto,
+  })
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.logService.findById(id);
   }
 
-  @ApiOperation({ summary: '로그 수정' })
+  @ApiOperation({ summary: '간단 끼록 수정' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
@@ -69,7 +79,7 @@ export class LogController {
     return await this.logService.update(id, updateLogDto, user);
   }
 
-  @ApiOperation({ summary: '로그 삭제' })
+  @ApiOperation({ summary: '간단 끼록 삭제' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
@@ -77,7 +87,7 @@ export class LogController {
     return await this.logService.delete(id, user);
   }
 
-  @ApiOperation({ summary: '로그 이미지 업로드' })
+  @ApiOperation({ summary: '간단 끼록 이미지 업로드' })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Post('upload-image')

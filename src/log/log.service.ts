@@ -1,14 +1,14 @@
 import { checkExists } from '@/common/error-util';
 import { ImageService } from '@/image/image.service';
-import { CreateLogDto } from '@/log/dto/create-log.dto';
+import { CreateLogDto } from '@/log/dto/request/create-log.dto';
 import { LogDto } from '@/log/dto/log.dto';
-import { UpdateLogDto } from '@/log/dto/update-log.dto';
+import { UpdateLogDto } from '@/log/dto/request/update-log.dto';
 import { LogWithImages } from '@/log/log.types';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { CursorPaginationRequestDto } from '@/common/dto/pagination-request.dto';
-import { CursorPaginationLogResponseDto } from '@/log/dto/cursor-pagination-log-response.dto';
+import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
+import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class LogService {
   ) {}
 
   async create(createLogDto: CreateLogDto, user: UserWithoutPassword): Promise<LogDto> {
-    const { title, description, kick, imageUrls } = createLogDto;
+    const { title, description, kick, images: imageUrls } = createLogDto;
 
     const log = await this.prismaService.log.create({
       include: { images: true },
@@ -35,7 +35,9 @@ export class LogService {
         images: {
           create: imageUrls.map((imageUrl) => {
             return {
-              url: imageUrl,
+              original: imageUrl.original,
+              w_256: imageUrl.w256,
+              w_1024: imageUrl.w1024,
             };
           }),
         },
@@ -88,22 +90,42 @@ export class LogService {
   }
 
   async update(id: number, updateLogDto: UpdateLogDto, user: UserWithoutPassword): Promise<LogDto> {
-    const { title, description, kick, imageUrls } = updateLogDto;
+    const { title, description, kick, images } = updateLogDto;
 
     const checkedLog = await this.checkAuthentication(user, id);
 
+    // 해당로그에 이미 존재하는 이미지들
     const existImages = checkedLog.images;
-    const existImageUrls = existImages.map((image) => image.url);
+    // 업데이트할 이미지들
+    const updateImages = images;
 
-    const deleteImages = existImages.filter((existUrl) => !imageUrls.includes(existUrl.url));
-    const insertUrls = imageUrls.filter((imageUrl) => !existImageUrls.includes(imageUrl));
+    // 해당 로그에 이미 존재하는 이미지 원본 urls
+    const existImageOriginals = existImages.map((image) => image.original);
+
+    // 업데이트할 이미지 원본 urls
+    const updateImageOriginals = updateImages.map((image) => image.original);
+
+    // 삭제할 이미지 원본 urls와 이미 존재하는 이미지 원본 urls들의 교집합 urls
+    const unionUrls = existImageOriginals.filter((originalUrl) =>
+      updateImageOriginals.includes(originalUrl),
+    );
+
+    // 삭제할 이미지 - 이미 존재하는 이미지중 교집합에 포함이 되지 않는 이미지
+    const deleteImages = existImages.filter((existUrl) => !unionUrls.includes(existUrl.original));
+
+    // 추가될 이미지 - 업데이트할 이미지중 교집합에 포함이 되지 않는 이미지
+    const insertImages = updateImages.filter(
+      (updateUrl) => !unionUrls.includes(updateUrl.original),
+    );
 
     // transaction start
     const updateLog = await this.prismaService.$transaction(async () => {
       // 삭제할 이미지는 삭제
       await Promise.all(deleteImages.map((image) => this.imageService.delete(image.id)));
       // 추가할 이미지는 추가
-      await Promise.all(insertUrls.map((url) => this.imageService.create(url, checkedLog.id)));
+      await Promise.all(
+        insertImages.map((image) => this.imageService.create(image, checkedLog.id)),
+      );
 
       //update
       const updateLog = await this.prismaService.log.update({
@@ -127,7 +149,7 @@ export class LogService {
     return LogDto.fromLogIncludeImages(updateLog);
   }
 
-  async delete(id: number, user: UserWithoutPassword): Promise<boolean> {
+  async delete(id: number, user: UserWithoutPassword) {
     const checkedLog = await this.checkAuthentication(user, id);
 
     // transaction start
@@ -141,8 +163,6 @@ export class LogService {
       await Promise.all(checkedLog.images.map((image) => this.imageService.delete(image.id)));
     });
     // transaction end
-
-    return true;
   }
 
   private async checkAuthentication(

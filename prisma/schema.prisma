@@ -90,8 +90,10 @@ model Log {
 }
 
 model Image {
-  id    Int    @id @default(autoincrement())
-  url   String @db.VarChar(1024)
-  log   Log?   @relation(fields: [logId], references: [id], onDelete: Cascade)
-  logId Int?
+  id       Int    @id @default(autoincrement())
+  original String @db.VarChar(1024)
+  w_256    String @db.VarChar(1024)
+  w_1024   String @db.VarChar(1024)
+  log      Log?   @relation(fields: [logId], references: [id], onDelete: Cascade)
+  logId    Int?
 }

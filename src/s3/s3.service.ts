@@ -1,3 +1,4 @@
+import { ImageDto } from '@/image/dtos/image.dto';
 import { BucketFolderType } from '@/s3/s3.type';
 import { getCurrentDateAS } from '@/util/time';
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
@@ -32,7 +33,7 @@ export class S3Service {
     const params = files.map((file) => {
       return {
         Bucket: this.bucket,
-        Key: `${bucketFolder}/${this.generateFileName()}`,
+        Key: `${bucketFolder}/original/${this.generateFileName(file.originalname)}`,
         Body: file.buffer,
         ACL: 'public-read',
         ContentType: file.mimetype,
@@ -46,16 +47,22 @@ export class S3Service {
 
       Logger.debug('image upload success');
 
-      return uploadedImages.map((uploadedImage) => uploadedImage.Location);
+      return uploadedImages.map((uploadedImage) =>
+        ImageDto.fromOriginalImage(uploadedImage.Location),
+      );
     } catch (err) {
       Logger.error(err);
       throw new InternalServerErrorException('image upload fail');
     }
   }
 
-  // example: 20220712-bb5dc8842ca31d4603d6aa11448d1654
-  private generateFileName() {
-    return getCurrentDateAS('yyyyMMDD').concat('-').concat(crypto.randomBytes(20).toString('hex'));
+  // example: 20220712-bb5dc8842ca31d4603d6aa11448d1654.jpg
+  private generateFileName(fileName: string) {
+    const fileExt = `.${fileName.split('.').pop()}`;
+    return getCurrentDateAS('yyyyMMDD')
+      .concat('-')
+      .concat(crypto.randomBytes(20).toString('hex'))
+      .concat(fileExt);
   }
 
   getUrl(key: string) {
