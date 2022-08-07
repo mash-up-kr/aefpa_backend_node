@@ -38,7 +38,7 @@ export class AuthService {
 
   async signup({ email, nickname, password }: SignUpRequest) {
     const foundUser = await this.userService.findUserByEmail(email);
-    if (foundUser) {
+    if (foundUser && foundUser?.password != null) {
       throw new BadRequestException(ErrorMessages.alreadyExists('email'));
     }
 
