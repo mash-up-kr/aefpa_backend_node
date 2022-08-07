@@ -1,10 +1,11 @@
 import { CharacterType, Follows } from '@/api/server/generated';
 import { CharacterService } from '@/character/character.service';
+import { ErrorMessages } from '@/common/error-messages';
 import { checkExists } from '@/common/error-util';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithFollowingResponse } from '@/user/entity/user-with-following.response';
 import { UserEntity } from '@/user/entity/user.entity';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
@@ -60,6 +61,8 @@ export class UserService {
       await this.prismaService.follows.delete({
         where: { followerId_followingId: { followerId, followingId } },
       });
+    } else {
+      throw new ConflictException(`already ${shouldFollow ? '' : 'not '}following`);
     }
 
     return {
