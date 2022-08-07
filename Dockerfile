@@ -4,7 +4,6 @@ WORKDIR /usr/src/app
 
 COPY . .
 RUN yarn install
-RUN yarn db:migrate
 RUN yarn build
 
 FROM builder AS runner
