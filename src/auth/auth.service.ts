@@ -42,10 +42,11 @@ export class AuthService {
       throw new BadRequestException(ErrorMessages.alreadyExists('email'));
     }
 
-    const user = await this.prismaService.user.create({
-      include: {
-        userCharacter: true,
+    const user = await this.prismaService.user.update({
+      where: {
+        email,
       },
+      include: { userCharacter: true },
       data: {
         email,
         password: await this.hashPassword.hash(password),
