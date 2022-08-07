@@ -1,4 +1,4 @@
-import { checkExists } from '@/common/error-util';
+import { checkExists, checkNotExists } from '@/common/error-util';
 import { ImageService } from '@/image/image.service';
 import { CreateLogDto } from '@/log/dto/request/create-log.dto';
 import { LogDto } from '@/log/dto/log.dto';
@@ -6,7 +6,7 @@ import { UpdateLogDto } from '@/log/dto/request/update-log.dto';
 import { LogWithImages } from '@/log/log.types';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
@@ -22,7 +22,7 @@ export class LogService {
     const { title, description, kick, images: imageUrls } = createLogDto;
 
     const log = await this.prismaService.log.create({
-      include: { images: true },
+      include: { images: true, goodUsers: true },
       data: {
         title,
         description,
@@ -44,7 +44,7 @@ export class LogService {
       },
     });
 
-    return LogDto.fromLogIncludeImages(log);
+    return LogDto.fromLogIncludeImages(log, user.id);
   }
 
   async findAll(
@@ -58,6 +58,7 @@ export class LogService {
       const foundLogs = await this.prismaService.log.findMany({
         include: {
           images: true,
+          goodUsers: true,
         },
         where: {
           userId: user.id,
@@ -67,17 +68,18 @@ export class LogService {
         },
       });
 
-      return foundLogs.map((foundLog) => LogDto.fromLogIncludeImages(foundLog));
+      return foundLogs.map((foundLog) => LogDto.fromLogIncludeImages(foundLog, user.id));
     }
 
     return await this.findAllByCursorPagination(user, pageSize, endCursor);
   }
 
-  async findById(id: number): Promise<LogDto> {
+  async findById(id: number, user: UserWithoutPassword): Promise<LogDto> {
     const foundLog = await this.prismaService.log.findUnique({
       include: {
         images: true,
         user: true,
+        goodUsers: true,
       },
       where: {
         id,
@@ -86,7 +88,7 @@ export class LogService {
 
     const checkedLog = checkExists(foundLog, 'log');
 
-    return LogDto.fromLogIncludeImages(checkedLog);
+    return LogDto.fromLogIncludeImages(checkedLog, user.id);
   }
 
   async update(id: number, updateLogDto: UpdateLogDto, user: UserWithoutPassword): Promise<LogDto> {
@@ -131,6 +133,7 @@ export class LogService {
       const updateLog = await this.prismaService.log.update({
         include: {
           images: true,
+          goodUsers: true,
         },
         where: {
           id,
@@ -146,7 +149,7 @@ export class LogService {
     });
     // transaction end
 
-    return LogDto.fromLogIncludeImages(updateLog);
+    return LogDto.fromLogIncludeImages(updateLog, user.id);
   }
 
   async delete(id: number, user: UserWithoutPassword) {
@@ -165,6 +168,77 @@ export class LogService {
     // transaction end
   }
 
+  async like(logId: number, user: UserWithoutPassword, type: 'like' | 'unlike') {
+    const foundLog = await this.findById(logId, user);
+
+    const foundUserGoodLog = await this.prismaService.userGoodLog.findUnique({
+      where: {
+        userId_logId: {
+          userId: user.id,
+          logId: logId,
+        },
+      },
+    });
+
+    // if like
+    if (type === 'like') {
+      // if already exists throw exception
+      try {
+        checkNotExists(foundUserGoodLog, 'log');
+      } catch (err) {
+        throw new BadRequestException('already LIKE');
+      }
+
+      const userGoodLogs = await this.prismaService.userGoodLog.create({
+        include: {
+          log: {
+            include: {
+              images: true,
+              goodUsers: true,
+            },
+          },
+        },
+        data: {
+          userId: user.id,
+          logId: foundLog.id,
+        },
+      });
+
+      return LogDto.fromLogIncludeImages(userGoodLogs.log, user.id);
+    }
+    // if unlike
+    else {
+      // if not exists throw exception
+      try {
+        checkExists(foundUserGoodLog, 'log');
+      } catch (err) {
+        throw new BadRequestException('already UNLIKE');
+      }
+
+      await this.prismaService.userGoodLog.delete({
+        where: {
+          userId_logId: {
+            userId: user.id,
+            logId: logId,
+          },
+        },
+      });
+
+      // delete한건 한번더 조회해야한다.
+      const log = (await this.prismaService.log.findUnique({
+        include: {
+          images: true,
+          goodUsers: true,
+        },
+        where: {
+          id: logId,
+        },
+      })) as LogWithImages;
+
+      return LogDto.fromLogIncludeImages(log, user.id);
+    }
+  }
+
   private async checkAuthentication(
     user: UserWithoutPassword,
     logId: number,
@@ -172,6 +246,7 @@ export class LogService {
     const foundLog = await this.prismaService.log.findUnique({
       include: {
         images: true,
+        goodUsers: true,
       },
       where: {
         id: logId,
@@ -199,6 +274,7 @@ export class LogService {
         take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나더 조회
         include: {
           images: true,
+          goodUsers: true,
         },
         where: {
           userId: user.id,
@@ -227,7 +303,7 @@ export class LogService {
       const endCursor =
         foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].id) : null;
 
-      return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, {
+      return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, user.id, {
         pageSize,
         hasNextPage,
         endCursor,
@@ -242,6 +318,7 @@ export class LogService {
       take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나 더 조회
       include: {
         images: true,
+        goodUsers: true,
       },
       where: {
         userId: user.id,
@@ -273,7 +350,7 @@ export class LogService {
     const endCursorResult =
       foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].id) : null;
 
-    return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, {
+    return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, user.id, {
       pageSize,
       hasNextPage,
       endCursor: endCursorResult,

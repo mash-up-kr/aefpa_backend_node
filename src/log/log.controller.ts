@@ -63,8 +63,8 @@ export class LogController {
   })
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.logService.findById(id);
+  async findOne(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return await this.logService.findById(id, user);
   }
 
   @ApiOperation({ summary: '간단 끼록 수정' })
@@ -106,5 +106,29 @@ export class LogController {
     }
 
     return this.s3Service.upload(images, 'log');
+  }
+
+  @ApiOperation({ summary: '간단 끼록 좋아요' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: LogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/like')
+  like(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.logService.like(id, user, 'like');
+  }
+
+  @ApiOperation({ summary: '간단 끼록 좋아요 취소' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: LogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/unlike')
+  cancelLike(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.logService.like(id, user, 'unlike');
   }
 }

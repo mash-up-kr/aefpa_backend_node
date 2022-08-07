@@ -1,5 +1,6 @@
 import { Log } from '@/api/server/generated';
 import { ImageDto } from '@/image/dtos/image.dto';
+import { LikeDto } from '@/log/dto/log-good.dto';
 import { LogWithImages } from '@/log/log.types';
 import { encodeCursor } from '@/util/cursor-paginate';
 import { customPlainToInstance } from '@/util/plain-to-instance';
@@ -7,6 +8,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   MaxLength,
@@ -44,8 +46,17 @@ export class LogDto {
   @IsOptional()
   cursor?: string;
 
-  static fromLogIncludeImages(log: LogWithImages, cursorColumn?: keyof Log): LogDto {
-    const { id, createdAt, updatedAt, title, description, kick, images } = log;
+  @IsObject()
+  like: LikeDto;
+
+  static fromLogIncludeImages(
+    log: LogWithImages,
+    loginId: number,
+    cursorColumn?: keyof Log,
+  ): LogDto {
+    const { id, createdAt, updatedAt, title, description, kick, images, goodUsers } = log;
+
+    const isLoginUserLike = goodUsers.some((goodUser) => goodUser.userId === loginId);
 
     if (cursorColumn) {
       return customPlainToInstance(LogDto, {
@@ -63,6 +74,10 @@ export class LogDto {
         description,
         kick,
         cursor: encodeCursor(log[cursorColumn] as number),
+        like: customPlainToInstance(LikeDto, {
+          count: goodUsers.length,
+          isLike: isLoginUserLike,
+        }),
       });
     }
 
@@ -80,6 +95,10 @@ export class LogDto {
       title,
       description,
       kick,
+      like: customPlainToInstance(LikeDto, {
+        count: goodUsers.length,
+        isLike: isLoginUserLike,
+      }),
     });
   }
 }
