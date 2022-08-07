@@ -25,7 +25,7 @@ jobs:
 
       - name: Run tests
         run: |
-          yarn db:migrate
+          yarn db:generate
           yarn test
   deploy:
     runs-on: ubuntu-latest
