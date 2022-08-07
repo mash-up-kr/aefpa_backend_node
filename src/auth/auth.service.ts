@@ -13,6 +13,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -48,9 +49,18 @@ export class AuthService {
   }
 
   async signup({ email, nickname, password }: SignUpRequest) {
-    const foundUser = await this.userService.findUserByEmail(email);
+    const foundUser = await this.prismaService.user.findFirst({
+      where: { email },
+      include: { userCode: true },
+    });
+
     if (foundUser && foundUser?.password != null) {
       throw new BadRequestException(ErrorMessages.alreadyExists('email'));
+    }
+
+    const codes = foundUser?.userCode ?? [];
+    if (codes.length === 0 || !codes[0].confirmedAt) {
+      throw new ForbiddenException('Email confirmation is required.');
     }
 
     const user = await this.prismaService.user.update({
@@ -154,7 +164,10 @@ export class AuthService {
     // Set expiredAt to current time (expired state)
     await this.prismaService.userCode.update({
       where: { id: userCode.id },
-      data: { expiredAt: moment().utc().format() },
+      data: {
+        expiredAt: moment().utc().format(),
+        confirmedAt: moment().utc().format(),
+      },
     });
 
     return true;
