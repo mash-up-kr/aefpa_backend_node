@@ -10,6 +10,7 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
+import e from 'express';
 
 @Injectable()
 export class LogService {
@@ -22,7 +23,7 @@ export class LogService {
     const { title, description, kick, images: imageUrls } = createLogDto;
 
     const log = await this.prismaService.log.create({
-      include: { images: true, goodUsers: true },
+      include: { images: true, goodUsers: true, scrapUsers: true },
       data: {
         title,
         description,
@@ -59,6 +60,7 @@ export class LogService {
         include: {
           images: true,
           goodUsers: true,
+          scrapUsers: true,
         },
         where: {
           userId: user.id,
@@ -80,6 +82,7 @@ export class LogService {
         images: true,
         user: true,
         goodUsers: true,
+        scrapUsers: true,
       },
       where: {
         id,
@@ -134,6 +137,7 @@ export class LogService {
         include: {
           images: true,
           goodUsers: true,
+          scrapUsers: true,
         },
         where: {
           id,
@@ -195,6 +199,7 @@ export class LogService {
             include: {
               images: true,
               goodUsers: true,
+              scrapUsers: true,
             },
           },
         },
@@ -229,6 +234,80 @@ export class LogService {
         include: {
           images: true,
           goodUsers: true,
+          scrapUsers: true,
+        },
+        where: {
+          id: logId,
+        },
+      })) as LogWithImages;
+
+      return LogDto.fromLogIncludeImages(log, user.id);
+    }
+  }
+
+  async scrap(logId: number, user: UserWithoutPassword, type: 'scrap' | 'unscrap') {
+    const foundLog = await this.findById(logId, user);
+
+    const foundUserScrapLog = await this.prismaService.userScrapLog.findUnique({
+      where: {
+        userId_logId: {
+          userId: user.id,
+          logId: logId,
+        },
+      },
+    });
+
+    // scrap
+    if (type === 'scrap') {
+      // if already exists throw exception
+      try {
+        checkNotExists(foundUserScrapLog, 'log');
+      } catch (err) {
+        throw new BadRequestException('already SCRAPPED');
+      }
+
+      const userScrapLog = await this.prismaService.userScrapLog.create({
+        include: {
+          log: {
+            include: {
+              images: true,
+              goodUsers: true,
+              scrapUsers: true,
+            },
+          },
+        },
+        data: {
+          userId: user.id,
+          logId: foundLog.id,
+        },
+      });
+
+      return LogDto.fromLogIncludeImages(userScrapLog.log, user.id);
+    }
+    // unscrap
+    else {
+      // if not exists throw exception
+      try {
+        checkExists(foundUserScrapLog, 'log');
+      } catch (err) {
+        throw new BadRequestException('already UNSCRAPPED');
+      }
+
+      await this.prismaService.userScrapLog.delete({
+        where: {
+          userId_logId: {
+            userId: user.id,
+            logId: logId,
+          },
+        },
+      });
+
+      // delete한건 한번더 조회해야한다.
+      const log = (await this.prismaService.log.findUnique({
+        include: {
+          images: true,
+          goodUsers: true,
+          scrapUsers: true,
         },
         where: {
           id: logId,
@@ -247,6 +326,7 @@ export class LogService {
       include: {
         images: true,
         goodUsers: true,
+        scrapUsers: true,
       },
       where: {
         id: logId,
@@ -275,6 +355,7 @@ export class LogService {
         include: {
           images: true,
           goodUsers: true,
+          scrapUsers: true,
         },
         where: {
           userId: user.id,
@@ -319,6 +400,7 @@ export class LogService {
       include: {
         images: true,
         goodUsers: true,
+        scrapUsers: true,
       },
       where: {
         userId: user.id,

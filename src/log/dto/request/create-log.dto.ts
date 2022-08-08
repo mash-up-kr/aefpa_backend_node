@@ -7,4 +7,5 @@ export class CreateLogDto extends OmitType(LogDto, [
   'updatedAt',
   'cursor',
   'like',
+  'isScrapped',
 ]) {}

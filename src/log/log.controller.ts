@@ -131,4 +131,28 @@ export class LogController {
   cancelLike(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
     return this.logService.like(id, user, 'unlike');
   }
+
+  @ApiOperation({ summary: '간단 끼록 스크랩' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: LogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/scrap')
+  scrap(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.logService.scrap(id, user, 'scrap');
+  }
+
+  @ApiOperation({ summary: '간단 끼록 스크랩 취소' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: LogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/unscrap')
+  cancelScrap(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.logService.scrap(id, user, 'unscrap');
+  }
 }
