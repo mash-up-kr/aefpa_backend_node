@@ -100,6 +100,7 @@ describe(' Test suite', () => {
           updatedAt: '2022-08-06T11:53:14.625Z',
         },
         goodUsers: [{ userId: 2, logId: 3 }],
+        scrapUsers: [{ userId: 2, logId: 3, createdAt: new Date() }],
       });
 
       prismaService.userGoodLog?.findUnique.mockResolvedValue({});
@@ -139,6 +140,7 @@ describe(' Test suite', () => {
           updatedAt: new Date(2022, 1, 1),
         },
         goodUsers: [{ userId: 2, logId: 3 }],
+        scrapUsers: [{ userId: 2, logId: 3, createdAt: new Date() }],
       });
 
       prismaService.userGoodLog?.findUnique.mockResolvedValue(null);
@@ -156,6 +158,7 @@ describe(' Test suite', () => {
           userId: 2,
           images: [{ id: 5, original: 'string', w_256: 'string', w_1024: 'string', logId: 5 }],
           goodUsers: [{ userId: 2, logId: 5 }],
+          scrapUsers: [{ userId: 2, logId: 5, createdAt: new Date() }],
         },
       });
 
@@ -240,6 +243,7 @@ describe(' Test suite', () => {
           updatedAt: '2022-08-06T11:53:14.625Z',
         },
         goodUsers: [{ userId: 2, logId: 3 }],
+        scrapUsers: [{ userId: 2, logId: 3, createdAt: new Date() }],
       });
 
       prismaService.userGoodLog?.findUnique.mockResolvedValue(null);
@@ -280,6 +284,7 @@ describe(' Test suite', () => {
             updatedAt: new Date(2022, 1, 1),
           },
           goodUsers: [{ userId: 2, logId: 3 }],
+          scrapUsers: [{ userId: 2, logId: 3, createdAt: new Date() }],
         })
         // second call
         .mockResolvedValueOnce({
@@ -292,6 +297,7 @@ describe(' Test suite', () => {
           userId: 2,
           images: [{ id: 5, original: 'string', w_256: 'string', w_1024: 'string', logId: 5 }],
           goodUsers: [],
+          scrapUsers: [{ userId: 2, logId: 3, createdAt: new Date() }],
         });
 
       prismaService.userGoodLog?.findUnique.mockResolvedValue({});
