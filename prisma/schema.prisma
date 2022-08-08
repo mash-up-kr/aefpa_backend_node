@@ -110,6 +110,7 @@ model UserScrapLog {
   createdAt DateTime @default(now())
 
   @@id([userId, logId])
+  @@index([createdAt])
 }
 
 model UserGoodLog {
