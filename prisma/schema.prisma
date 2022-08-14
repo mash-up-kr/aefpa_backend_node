@@ -103,12 +103,14 @@ model Image {
 }
 
 model UserScrapLog {
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
-  log    Log  @relation(fields: [logId], references: [id])
-  logId  Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  log       Log      @relation(fields: [logId], references: [id])
+  logId     Int
+  createdAt DateTime @default(now())
 
   @@id([userId, logId])
+  @@index([createdAt])
 }
 
 model UserGoodLog {

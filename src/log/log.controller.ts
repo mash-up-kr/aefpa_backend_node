@@ -55,6 +55,21 @@ export class LogController {
     return await this.logService.findAll(cursorPaginationRequestDto, user);
   }
 
+  @ApiOperation({ summary: '간단 끼록 스크랩 목록 조회(페이지네이션)' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: CursorPaginationLogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('/scrap')
+  findAllByScrap(
+    @Query() cursorPaginationRequestDto: CursorPaginationRequestDto,
+    @User() user: UserWithoutPassword,
+  ) {
+    return this.logService.findAll(cursorPaginationRequestDto, user, true);
+  }
+
   @ApiOperation({ summary: '간단 끼록 하나 조회' })
   @ApiBearerAuth('jwt')
   @ApiOkResponse({
@@ -130,5 +145,29 @@ export class LogController {
   @Post(':id/unlike')
   cancelLike(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
     return this.logService.like(id, user, 'unlike');
+  }
+
+  @ApiOperation({ summary: '간단 끼록 스크랩' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: LogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/scrap')
+  scrap(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.logService.scrap(id, user, 'scrap');
+  }
+
+  @ApiOperation({ summary: '간단 끼록 스크랩 취소' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: LogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/unscrap')
+  cancelScrap(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.logService.scrap(id, user, 'unscrap');
   }
 }

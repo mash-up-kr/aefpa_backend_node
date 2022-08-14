@@ -7,6 +7,7 @@ import { customPlainToInstance } from '@/util/plain-to-instance';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsNumber,
   IsObject,
   IsOptional,
@@ -49,14 +50,20 @@ export class LogDto {
   @IsObject()
   like: LikeDto;
 
+  @IsBoolean()
+  isScrapped: boolean;
+
   static fromLogIncludeImages(
     log: LogWithImages,
     loginId: number,
     cursorColumn?: keyof Log,
   ): LogDto {
-    const { id, createdAt, updatedAt, title, description, kick, images, goodUsers } = log;
+    const { id, createdAt, updatedAt, title, description, kick, images, goodUsers, scrapUsers } =
+      log;
 
     const isLoginUserLike = goodUsers.some((goodUser) => goodUser.userId === loginId);
+
+    const isLoginUserScrap = scrapUsers.some((scrapUser) => scrapUser.userId === loginId);
 
     if (cursorColumn) {
       return customPlainToInstance(LogDto, {
@@ -78,6 +85,7 @@ export class LogDto {
           count: goodUsers.length,
           isLike: isLoginUserLike,
         }),
+        isScrapped: isLoginUserScrap,
       });
     }
 
@@ -99,6 +107,7 @@ export class LogDto {
         count: goodUsers.length,
         isLike: isLoginUserLike,
       }),
+      isScrapped: isLoginUserScrap,
     });
   }
 }

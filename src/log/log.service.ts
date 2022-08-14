@@ -22,7 +22,7 @@ export class LogService {
     const { title, description, kick, images: imageUrls } = createLogDto;
 
     const log = await this.prismaService.log.create({
-      include: { images: true, goodUsers: true },
+      include: { images: true, goodUsers: true, scrapUsers: true },
       data: {
         title,
         description,
@@ -50,15 +50,40 @@ export class LogService {
   async findAll(
     cursorPaginationRequestDto: CursorPaginationRequestDto,
     user: UserWithoutPassword,
+    isScrapped = false,
   ): Promise<LogDto[] | CursorPaginationLogResponseDto> {
     const { pageSize, endCursor } = cursorPaginationRequestDto;
 
     // find all without cursor pagination
     if (!pageSize) {
+      // scrap logs
+      if (isScrapped) {
+        const foundLogs = await this.prismaService.userScrapLog.findMany({
+          include: {
+            log: {
+              include: {
+                images: true,
+                goodUsers: true,
+                scrapUsers: true,
+              },
+            },
+          },
+          where: {
+            userId: user.id,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+
+        return foundLogs.map((foundLog) => LogDto.fromLogIncludeImages(foundLog.log, user.id));
+      }
+      // logs
       const foundLogs = await this.prismaService.log.findMany({
         include: {
           images: true,
           goodUsers: true,
+          scrapUsers: true,
         },
         where: {
           userId: user.id,
@@ -71,7 +96,7 @@ export class LogService {
       return foundLogs.map((foundLog) => LogDto.fromLogIncludeImages(foundLog, user.id));
     }
 
-    return await this.findAllByCursorPagination(user, pageSize, endCursor);
+    return await this.findAllByCursorPagination(user, isScrapped, pageSize, endCursor);
   }
 
   async findById(id: number, user: UserWithoutPassword): Promise<LogDto> {
@@ -80,6 +105,7 @@ export class LogService {
         images: true,
         user: true,
         goodUsers: true,
+        scrapUsers: true,
       },
       where: {
         id,
@@ -134,6 +160,7 @@ export class LogService {
         include: {
           images: true,
           goodUsers: true,
+          scrapUsers: true,
         },
         where: {
           id,
@@ -195,6 +222,7 @@ export class LogService {
             include: {
               images: true,
               goodUsers: true,
+              scrapUsers: true,
             },
           },
         },
@@ -229,6 +257,80 @@ export class LogService {
         include: {
           images: true,
           goodUsers: true,
+          scrapUsers: true,
+        },
+        where: {
+          id: logId,
+        },
+      })) as LogWithImages;
+
+      return LogDto.fromLogIncludeImages(log, user.id);
+    }
+  }
+
+  async scrap(logId: number, user: UserWithoutPassword, type: 'scrap' | 'unscrap') {
+    const foundLog = await this.findById(logId, user);
+
+    const foundUserScrapLog = await this.prismaService.userScrapLog.findUnique({
+      where: {
+        userId_logId: {
+          userId: user.id,
+          logId: logId,
+        },
+      },
+    });
+
+    // scrap
+    if (type === 'scrap') {
+      // if already exists throw exception
+      try {
+        checkNotExists(foundUserScrapLog, 'log');
+      } catch (err) {
+        throw new BadRequestException('already SCRAPPED');
+      }
+
+      const userScrapLog = await this.prismaService.userScrapLog.create({
+        include: {
+          log: {
+            include: {
+              images: true,
+              goodUsers: true,
+              scrapUsers: true,
+            },
+          },
+        },
+        data: {
+          userId: user.id,
+          logId: foundLog.id,
+        },
+      });
+
+      return LogDto.fromLogIncludeImages(userScrapLog.log, user.id);
+    }
+    // unscrap
+    else {
+      // if not exists throw exception
+      try {
+        checkExists(foundUserScrapLog, 'log');
+      } catch (err) {
+        throw new BadRequestException('already UNSCRAPPED');
+      }
+
+      await this.prismaService.userScrapLog.delete({
+        where: {
+          userId_logId: {
+            userId: user.id,
+            logId: logId,
+          },
+        },
+      });
+
+      // delete한건 한번더 조회해야한다.
+      const log = (await this.prismaService.log.findUnique({
+        include: {
+          images: true,
+          goodUsers: true,
+          scrapUsers: true,
         },
         where: {
           id: logId,
@@ -247,6 +349,7 @@ export class LogService {
       include: {
         images: true,
         goodUsers: true,
+        scrapUsers: true,
       },
       where: {
         id: logId,
@@ -265,16 +368,71 @@ export class LogService {
   // find all by cursor pagination
   private async findAllByCursorPagination(
     user: UserWithoutPassword,
+    isScrapped: boolean,
     pageSize: number,
     endCursor?: string,
   ) {
     // first page
     if (!endCursor) {
+      //scrapped logs
+      if (isScrapped) {
+        const foundLogs = await this.prismaService.userScrapLog.findMany({
+          take: pageSize + 1,
+          include: {
+            log: {
+              include: {
+                images: true,
+                goodUsers: true,
+                scrapUsers: true,
+              },
+            },
+          },
+          where: {
+            userId: user.id,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+
+        // get hasNextPage
+        let hasNextPage = false;
+
+        if (pageSize + 1 === foundLogs.length) {
+          hasNextPage = true;
+          foundLogs.pop(); // 다음 페이지 존재하면 pop
+        }
+
+        // get has totalCount
+        const totalCount = await this.prismaService.userScrapLog.count({
+          where: {
+            userId: user.id,
+          },
+        });
+
+        //get endCursor
+        const endCursor =
+          foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].createdAt) : null;
+
+        return CursorPaginationLogResponseDto.fromLogIncludeImages(
+          foundLogs.map((foundLog) => foundLog.log),
+          user.id,
+          {
+            pageSize,
+            hasNextPage,
+            endCursor,
+            totalCount,
+          },
+        );
+      }
+
+      //logs
       const foundLogs = await this.prismaService.log.findMany({
         take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나더 조회
         include: {
           images: true,
           goodUsers: true,
+          scrapUsers: true,
         },
         where: {
           userId: user.id,
@@ -312,6 +470,64 @@ export class LogService {
     }
 
     //  after second page...
+    // scrapped logs
+    if (isScrapped) {
+      const decodedEndCursor = decodeCursor('Date', endCursor) as Date;
+
+      const foundLogs = await this.prismaService.userScrapLog.findMany({
+        take: pageSize + 1,
+        include: {
+          log: {
+            include: {
+              images: true,
+              goodUsers: true,
+              scrapUsers: true,
+            },
+          },
+        },
+        where: {
+          userId: user.id,
+          createdAt: {
+            lt: decodedEndCursor,
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      // get hasNextPage
+      let hasNextPage = false;
+
+      if (pageSize + 1 === foundLogs.length) {
+        hasNextPage = true;
+        foundLogs.pop(); // 다음 페이지 존재하면 pop
+      }
+
+      // get has totalCount
+      const totalCount = await this.prismaService.userScrapLog.count({
+        where: {
+          userId: user.id,
+        },
+      });
+
+      //get endCursor
+      const endCursorResult =
+        foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].createdAt) : null;
+
+      return CursorPaginationLogResponseDto.fromLogIncludeImages(
+        foundLogs.map((foundLog) => foundLog.log),
+        user.id,
+        {
+          pageSize,
+          hasNextPage,
+          endCursor: endCursorResult,
+          totalCount,
+        },
+      );
+    }
+
+    // logs
     const decodedEndCursor = decodeCursor('number', endCursor) as number;
 
     const foundLogs = await this.prismaService.log.findMany({
@@ -319,6 +535,7 @@ export class LogService {
       include: {
         images: true,
         goodUsers: true,
+        scrapUsers: true,
       },
       where: {
         userId: user.id,
