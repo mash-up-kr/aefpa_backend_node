@@ -231,4 +231,20 @@ export class AuthService {
     );
     return true;
   }
+
+  async resetPassword(
+    userId: number,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<boolean> {
+    // Both passwords are plain text so direct comparison is ok
+    if (newPassword.trim() !== confirmPassword.trim()) {
+      throw new BadRequestException(ErrorMessages.incorrect('password'));
+    }
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { password: await this.hashPassword.hash(newPassword.trim()) },
+    });
+    return true;
+  }
 }

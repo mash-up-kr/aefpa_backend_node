@@ -1,4 +1,5 @@
 import { AuthService } from '@/auth/auth.service';
+import { ResetPasswordRequest } from '@/auth/dto/reset-password.request';
 import { SignUpRequest } from '@/auth/dto/sign-up.request';
 import { SignUpResponse } from '@/auth/dto/sign-up.response';
 import { AuthCodeConfirmRequest } from '@/auth/entity/auth-code-confirm.request';
@@ -6,6 +7,7 @@ import { AuthCodeRequest } from '@/auth/entity/auth-code.request';
 import { SignInRequest } from '@/auth/entity/sign-in.request';
 import { ValidateEmailRequest } from '@/auth/entity/validate-email.request';
 import { ValidateNicknameRequest } from '@/auth/entity/validate-nickname.request';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { LocalAuthGuard } from '@/auth/local-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
@@ -13,6 +15,7 @@ import { customPlainToInstance } from '@/util/plain-to-instance';
 import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiBody,
   ApiConflictResponse,
   ApiOperation,
@@ -72,5 +75,17 @@ export class AuthController {
   @Get('validate/nickname')
   async validateNickname(@Query() { nickname }: ValidateNicknameRequest) {
     return await this.authService.validateNickname(nickname);
+  }
+
+  @ApiOperation({ summary: '패스워드 리셋' })
+  @ApiBadRequestResponse({ description: '패스워드 확인 실패' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard)
+  @Post('password/reset')
+  async resetPassword(
+    @User() user: UserWithoutPassword,
+    @Body() { newPassword, confirmPassword }: ResetPasswordRequest,
+  ) {
+    return await this.authService.resetPassword(user.id, newPassword, confirmPassword);
   }
 }
