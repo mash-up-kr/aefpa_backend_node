@@ -92,7 +92,7 @@ export class AuthService {
         userCode: {
           updateMany: {
             where: { id: codes[0].id },
-            data: { confirmedAt: undefined },
+            data: { confirmedAt: null },
           },
         },
       },
@@ -237,13 +237,30 @@ export class AuthService {
     newPassword: string,
     confirmPassword: string,
   ): Promise<boolean> {
+    const userCode = await this.prismaService.userCode.findFirst({
+      where: { userId, type: 'CHANGE_PASSWORD', NOT: { confirmedAt: null } },
+    });
+
+    if (!userCode) {
+      throw new ForbiddenException('Email confirmation is required.');
+    }
+
     // Both passwords are plain text so direct comparison is ok
     if (newPassword.trim() !== confirmPassword.trim()) {
       throw new BadRequestException(ErrorMessages.incorrect('password'));
     }
+
     await this.prismaService.user.update({
       where: { id: userId },
-      data: { password: await this.hashPassword.hash(newPassword.trim()) },
+      data: {
+        password: await this.hashPassword.hash(newPassword.trim()),
+        userCode: {
+          updateMany: {
+            where: { id: userCode.id },
+            data: { confirmedAt: null },
+          },
+        },
+      },
     });
     return true;
   }
