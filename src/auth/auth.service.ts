@@ -1,3 +1,4 @@
+import { User } from '@/api/server/generated';
 import { AuthCodeType } from '@/auth/auth.types';
 import { SignUpRequest } from '@/auth/dto/sign-up.request';
 import { HashPassword } from '@/auth/hash-password';
@@ -37,8 +38,8 @@ export class AuthService {
     const foundUser = checkExists(await this.userService.findUserByEmail(email), 'email');
 
     // sign up in progress
-    if (!foundUser.password) {
-      throw new NotFoundException(ErrorMessages.notFound);
+    if (!this.isUserExistsAndConfirmed(foundUser)) {
+      throw new NotFoundException(ErrorMessages.notFound('email'));
     }
 
     if (foundUser.password != null && !this.isValidPassword(foundUser.password, pass)) {
@@ -54,7 +55,7 @@ export class AuthService {
       include: { userCode: true },
     });
 
-    if (foundUser && foundUser?.password != null) {
+    if (this.isUserExistsAndConfirmed(foundUser)) {
       throw new BadRequestException(ErrorMessages.alreadyExists('email'));
     }
 
@@ -95,10 +96,7 @@ export class AuthService {
 
   async validateUserEmail(email: string): Promise<boolean> {
     const foundUser = await this.userService.findUserByEmail(email);
-    if (foundUser && foundUser.password != null) {
-      return false;
-    }
-    return true;
+    return !this.isUserExistsAndConfirmed(foundUser);
   }
 
   private isValidPassword(original: string, target: string) {
@@ -115,7 +113,11 @@ export class AuthService {
   }
 
   async generateAuthCode(email: string, type: AuthCodeType) {
-    checkNotExists(await this.userService.findUserByEmail(email), 'email');
+    const foundUser = await this.userService.findUserByEmail(email);
+
+    if (this.isUserExistsAndConfirmed(foundUser)) {
+      throw new ConflictException(ErrorMessages.alreadyExists('email'));
+    }
 
     const code = this.randomService.getRandomAuthCode(6);
     const expiredAt = moment().utc().add(10, 'minutes').format();
@@ -187,9 +189,13 @@ export class AuthService {
     // 1. Check if the email is unique
     // 2. Check if the user
     const foundUser = await this.prismaService.user.findUnique({ where: { email } });
-    if (foundUser != null && foundUser.password != null) {
+    if (this.isUserExistsAndConfirmed(foundUser)) {
       throw new ConflictException(ErrorMessages.alreadyExists('email'));
     }
+  }
+
+  private isUserExistsAndConfirmed(user: User | null) {
+    return user && user.password != null;
   }
 
   async validateNickname(nickname: string) {
