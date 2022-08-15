@@ -52,7 +52,14 @@ export class AuthService {
   async signup({ email, nickname, password }: SignUpRequest) {
     const foundUser = await this.prismaService.user.findFirst({
       where: { email },
-      include: { userCode: true },
+      include: {
+        userCode: {
+          where: {
+            type: 'SIGN_UP',
+            NOT: { confirmedAt: null },
+          },
+        },
+      },
     });
 
     if (this.isUserExistsAndConfirmed(foundUser)) {
