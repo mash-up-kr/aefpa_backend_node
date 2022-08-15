@@ -89,6 +89,12 @@ export class AuthService {
             characterType: this.randomCharacterService.getRandomCharacter(),
           },
         },
+        userCode: {
+          updateMany: {
+            where: { id: codes[0].id },
+            data: { confirmedAt: undefined },
+          },
+        },
       },
     });
 
