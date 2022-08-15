@@ -38,7 +38,7 @@ export class AuthService {
     const foundUser = checkExists(await this.userService.findUserByEmail(email), 'email');
 
     // sign up in progress
-    if (!this.isUserExistsAndConfirmed(foundUser)) {
+    if (!this.isUserExistsAndRegistered(foundUser)) {
       throw new NotFoundException(ErrorMessages.notFound('email'));
     }
 
@@ -62,7 +62,7 @@ export class AuthService {
       },
     });
 
-    if (this.isUserExistsAndConfirmed(foundUser)) {
+    if (this.isUserExistsAndRegistered(foundUser)) {
       throw new BadRequestException(ErrorMessages.alreadyExists('email'));
     }
 
@@ -108,7 +108,7 @@ export class AuthService {
   }
 
   async validateUserEmail(email: string): Promise<boolean> {
-    return !this.isUserExistsAndConfirmed(await this.userService.findUserByEmail(email));
+    return !this.isUserExistsAndRegistered(await this.userService.findUserByEmail(email));
   }
 
   private isValidPassword(original: string, target: string) {
@@ -127,7 +127,7 @@ export class AuthService {
   async generateAuthCode(email: string, type: AuthCodeType) {
     const foundUser = await this.userService.findUserByEmail(email);
 
-    if (this.isUserExistsAndConfirmed(foundUser)) {
+    if (this.isUserExistsAndRegistered(foundUser)) {
       throw new ConflictException(ErrorMessages.alreadyExists('email'));
     }
 
@@ -212,13 +212,13 @@ export class AuthService {
     // 1. Check if the email is unique
     // 2. Check if the user is not confirmed
     const foundUser = await this.prismaService.user.findUnique({ where: { email } });
-    if (this.isUserExistsAndConfirmed(foundUser)) {
+    if (this.isUserExistsAndRegistered(foundUser)) {
       throw new ConflictException(ErrorMessages.alreadyExists('email'));
     }
     return true;
   }
 
-  private isUserExistsAndConfirmed(user: User | null) {
+  private isUserExistsAndRegistered(user: User | null) {
     return user && user.password != null;
   }
 
