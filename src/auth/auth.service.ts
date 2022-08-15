@@ -132,7 +132,12 @@ export class AuthService {
         type,
         code,
         expiredAt,
-        user: { create: { email } },
+        user: {
+          connectOrCreate: {
+            create: { email },
+            where: { email },
+          },
+        },
       },
     });
 
