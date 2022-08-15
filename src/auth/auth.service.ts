@@ -118,6 +118,12 @@ export class AuthService {
       throw new ConflictException(ErrorMessages.alreadyExists('email'));
     }
 
+    // Let the previous auth codes to be expired
+    await this.prismaService.userCode.updateMany({
+      where: { userId: foundUser?.id },
+      data: { expiredAt: moment().utc().format() },
+    });
+
     const code = this.randomService.getRandomAuthCode(6);
     const expiredAt = moment().utc().add(10, 'minutes').format();
 
