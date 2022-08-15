@@ -42,7 +42,7 @@ export class AuthService {
       throw new NotFoundException(ErrorMessages.notFound('email'));
     }
 
-    if (foundUser.password != null && !this.isValidPassword(foundUser.password, pass)) {
+    if (foundUser.password != null && !(await this.isValidPassword(foundUser.password, pass))) {
       throw new UnauthorizedException(ErrorMessages.incorrect('password'));
     }
 
@@ -111,9 +111,9 @@ export class AuthService {
     return !this.isUserExistsAndRegistered(await this.userService.findUserByEmail(email));
   }
 
-  private isValidPassword(original: string, target: string) {
+  private async isValidPassword(original: string, target: string) {
     // TODO: Use encryption library
-    return this.hashPassword.equal({ password: target, hashPassword: original });
+    return await this.hashPassword.equal({ password: target, hashPassword: original });
   }
 
   async createJwtFromUser(user: UserWithoutPassword) {
