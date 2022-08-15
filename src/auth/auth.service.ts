@@ -192,11 +192,12 @@ export class AuthService {
   async validateEmail(email: string) {
     // 0. Check if email is valid format (done with class validator)
     // 1. Check if the email is unique
-    // 2. Check if the user
+    // 2. Check if the user is not confirmed
     const foundUser = await this.prismaService.user.findUnique({ where: { email } });
     if (this.isUserExistsAndConfirmed(foundUser)) {
       throw new ConflictException(ErrorMessages.alreadyExists('email'));
     }
+    return true;
   }
 
   private isUserExistsAndConfirmed(user: User | null) {
