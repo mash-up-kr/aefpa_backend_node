@@ -95,8 +95,7 @@ export class AuthService {
   }
 
   async validateUserEmail(email: string): Promise<boolean> {
-    const foundUser = await this.userService.findUserByEmail(email);
-    return !this.isUserExistsAndConfirmed(foundUser);
+    return !this.isUserExistsAndConfirmed(await this.userService.findUserByEmail(email));
   }
 
   private isValidPassword(original: string, target: string) {
