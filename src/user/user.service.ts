@@ -139,6 +139,7 @@ export class UserService {
       await this.prismaService.user.findUnique({
         where: { id: userId },
         select: {
+          email: true,
           userCharacter: { select: { characterType: true } },
           userProfile: { select: { nickname: true } },
         },
@@ -149,6 +150,7 @@ export class UserService {
 
     return {
       logStats: await this.logStatsService.getLogStats(userId),
+      email: found.email,
       name: found.userProfile?.nickname ?? '',
       type,
       miniImageUrl: this.characterService.getCharacterImageUrl(type, 'mini'),
