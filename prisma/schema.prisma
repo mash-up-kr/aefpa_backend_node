@@ -26,6 +26,7 @@ model User {
   goodLogs      UserGoodLog[]
   followedBy    Follows[]      @relation("following")
   following     Follows[]      @relation("follower")
+  detailLogs    DetailLog[]
 }
 
 model Follows {
@@ -94,12 +95,14 @@ model Log {
 }
 
 model Image {
-  id       Int    @id @default(autoincrement())
-  original String @db.VarChar(1024)
-  w_256    String @db.VarChar(1024)
-  w_1024   String @db.VarChar(1024)
-  log      Log?   @relation(fields: [logId], references: [id], onDelete: Cascade)
-  logId    Int?
+  id        Int         @id @default(autoincrement())
+  original  String      @db.VarChar(1024)
+  w_256     String      @db.VarChar(1024)
+  w_1024    String      @db.VarChar(1024)
+  log       Log?        @relation(fields: [logId], references: [id], onDelete: Cascade)
+  logId     Int?
+  detailLog DetailLog[]
+  Recipe    Recipe[]
 }
 
 model UserScrapLog {
@@ -120,4 +123,27 @@ model UserGoodLog {
   logId  Int
 
   @@id([userId, logId])
+}
+
+model DetailLog {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(15)
+  description String   @db.VarChar(20)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  image       Image    @relation(fields: [imageId], references: [id])
+  imageId     Int
+  recipes     Recipe[]
+  ingredient  String   @db.VarChar(3000)
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      Int?
+}
+
+model Recipe {
+  id          Int        @id @default(autoincrement())
+  step        Int        @db.SmallInt()
+  image       Image      @relation(fields: [imageId], references: [id])
+  imageId     Int
+  DetailLog   DetailLog? @relation(fields: [detailLogId], references: [id])
+  detailLogId Int?
 }
