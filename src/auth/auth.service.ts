@@ -1,3 +1,4 @@
+import { User } from '@/api/server/generated';
 import { AuthCodeType } from '@/auth/auth.types';
 import { SignUpRequest } from '@/auth/dto/sign-up.request';
 import { HashPassword } from '@/auth/hash-password';
@@ -10,7 +11,14 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { userWithoutPassword, UserWithoutPassword } from '@/user/entity/user.entity';
 import { UserService } from '@/user/user.service';
 import { MailerService } from '@nestjs-modules/mailer';
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as moment from 'moment';
 
@@ -29,6 +37,11 @@ export class AuthService {
   async validate(email: string, pass: string): Promise<UserWithoutPassword> {
     const foundUser = checkExists(await this.userService.findUserByEmail(email), 'email');
 
+    // sign up in progress
+    if (!this.isUserExistsAndRegistered(foundUser)) {
+      throw new NotFoundException(ErrorMessages.notFound('email'));
+    }
+
     if (foundUser.password != null && !this.isValidPassword(foundUser.password, pass)) {
       throw new UnauthorizedException(ErrorMessages.incorrect('password'));
     }
@@ -37,9 +50,25 @@ export class AuthService {
   }
 
   async signup({ email, nickname, password }: SignUpRequest) {
-    const foundUser = await this.userService.findUserByEmail(email);
-    if (foundUser && foundUser?.password != null) {
+    const foundUser = await this.prismaService.user.findFirst({
+      where: { email },
+      include: {
+        userCode: {
+          where: {
+            type: 'SIGN_UP',
+            NOT: { confirmedAt: null },
+          },
+        },
+      },
+    });
+
+    if (this.isUserExistsAndRegistered(foundUser)) {
       throw new BadRequestException(ErrorMessages.alreadyExists('email'));
+    }
+
+    const codes = foundUser?.userCode ?? [];
+    if (codes.length === 0 || !codes[0].confirmedAt) {
+      throw new ForbiddenException('Email confirmation is required.');
     }
 
     const user = await this.prismaService.user.update({
@@ -60,6 +89,12 @@ export class AuthService {
             characterType: this.randomCharacterService.getRandomCharacter(),
           },
         },
+        userCode: {
+          updateMany: {
+            where: { id: codes[0].id },
+            data: { confirmedAt: undefined },
+          },
+        },
       },
     });
 
@@ -73,11 +108,7 @@ export class AuthService {
   }
 
   async validateUserEmail(email: string): Promise<boolean> {
-    const foundUser = await this.userService.findUserByEmail(email);
-    if (foundUser) {
-      return false;
-    }
-    return true;
+    return !this.isUserExistsAndRegistered(await this.userService.findUserByEmail(email));
   }
 
   private isValidPassword(original: string, target: string) {
@@ -94,7 +125,17 @@ export class AuthService {
   }
 
   async generateAuthCode(email: string, type: AuthCodeType) {
-    checkNotExists(await this.userService.findUserByEmail(email), 'email');
+    const foundUser = await this.userService.findUserByEmail(email);
+
+    if (this.isUserExistsAndRegistered(foundUser)) {
+      throw new ConflictException(ErrorMessages.alreadyExists('email'));
+    }
+
+    // Let the previous auth codes to be expired
+    await this.prismaService.userCode.updateMany({
+      where: { userId: foundUser?.id },
+      data: { expiredAt: moment().utc().format() },
+    });
 
     const code = this.randomService.getRandomAuthCode(6);
     const expiredAt = moment().utc().add(10, 'minutes').format();
@@ -104,7 +145,12 @@ export class AuthService {
         type,
         code,
         expiredAt,
-        user: { create: { email } },
+        user: {
+          connectOrCreate: {
+            create: { email },
+            where: { email },
+          },
+        },
       },
     });
 
@@ -143,7 +189,10 @@ export class AuthService {
     // Set expiredAt to current time (expired state)
     await this.prismaService.userCode.update({
       where: { id: userCode.id },
-      data: { expiredAt: moment().utc().format() },
+      data: {
+        expiredAt: moment().utc().format(),
+        confirmedAt: moment().utc().format(),
+      },
     });
 
     return true;
@@ -161,8 +210,16 @@ export class AuthService {
   async validateEmail(email: string) {
     // 0. Check if email is valid format (done with class validator)
     // 1. Check if the email is unique
-    checkNotExists(await this.prismaService.user.findUnique({ where: { email } }), 'email');
+    // 2. Check if the user is not confirmed
+    const foundUser = await this.prismaService.user.findUnique({ where: { email } });
+    if (this.isUserExistsAndRegistered(foundUser)) {
+      throw new ConflictException(ErrorMessages.alreadyExists('email'));
+    }
     return true;
+  }
+
+  private isUserExistsAndRegistered(user: User | null) {
+    return user && user.password != null;
   }
 
   async validateNickname(nickname: string) {
