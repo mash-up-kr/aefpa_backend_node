@@ -42,7 +42,7 @@ export class AuthService {
       throw new NotFoundException(ErrorMessages.notFound('email'));
     }
 
-    if (foundUser.password != null && !this.isValidPassword(foundUser.password, pass)) {
+    if (foundUser.password != null && !(await this.isValidPassword(foundUser.password, pass))) {
       throw new UnauthorizedException(ErrorMessages.incorrect('password'));
     }
 
@@ -92,7 +92,7 @@ export class AuthService {
         userCode: {
           updateMany: {
             where: { id: codes[0].id },
-            data: { confirmedAt: undefined },
+            data: { confirmedAt: null },
           },
         },
       },
@@ -111,9 +111,9 @@ export class AuthService {
     return !this.isUserExistsAndRegistered(await this.userService.findUserByEmail(email));
   }
 
-  private isValidPassword(original: string, target: string) {
+  private async isValidPassword(original: string, target: string) {
     // TODO: Use encryption library
-    return this.hashPassword.equal({ password: target, hashPassword: original });
+    return await this.hashPassword.equal({ password: target, hashPassword: original });
   }
 
   async createJwtFromUser(user: UserWithoutPassword) {
@@ -229,6 +229,39 @@ export class AuthService {
       await this.prismaService.userProfile.findUnique({ where: { nickname } }),
       'nickname',
     );
+    return true;
+  }
+
+  async resetPassword(
+    userId: number,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<boolean> {
+    const userCode = await this.prismaService.userCode.findFirst({
+      where: { userId, type: 'CHANGE_PASSWORD', NOT: { confirmedAt: null } },
+    });
+
+    if (!userCode) {
+      throw new ForbiddenException('Email confirmation is required.');
+    }
+
+    // Both passwords are plain text so direct comparison is ok
+    if (newPassword.trim() !== confirmPassword.trim()) {
+      throw new BadRequestException(ErrorMessages.incorrect('password'));
+    }
+
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: {
+        password: await this.hashPassword.hash(newPassword.trim()),
+        userCode: {
+          updateMany: {
+            where: { id: userCode.id },
+            data: { confirmedAt: null },
+          },
+        },
+      },
+    });
     return true;
   }
 }
