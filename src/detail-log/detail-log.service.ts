@@ -34,6 +34,7 @@ export class DetailLogService {
           },
         },
         scrapUsers: true,
+        goodUsers: true,
       },
       data: {
         title,
@@ -88,6 +89,7 @@ export class DetailLogService {
             },
           },
           scrapUsers: true,
+          goodUsers: true,
         },
         where: {
           userId: user.id,
@@ -115,6 +117,7 @@ export class DetailLogService {
           },
         },
         scrapUsers: true,
+        goodUsers: true,
       },
       where: {
         id,
@@ -241,6 +244,90 @@ export class DetailLogService {
     });
   }
 
+  async like(detailLogId: number, user: UserWithoutPassword, type: 'like' | 'unlike') {
+    const foundDetailLog = await this.findById(detailLogId, user);
+
+    const foundUserGoodLog = await this.prismaService.userGoodLog.findFirst({
+      where: {
+        userId: user.id,
+        detailLogId: detailLogId,
+      },
+    });
+
+    // if like
+    if (type === 'like') {
+      // if already exists throw exception
+      try {
+        checkNotExists(foundUserGoodLog, 'log');
+      } catch (err) {
+        throw new BadRequestException('already LIKE');
+      }
+
+      const userGoodLogs = await this.prismaService.userGoodLog.create({
+        include: {
+          detailLog: {
+            include: {
+              image: true,
+              recipes: {
+                include: {
+                  image: true,
+                },
+              },
+              scrapUsers: true,
+              goodUsers: true,
+            },
+          },
+        },
+        data: {
+          userId: user.id,
+          detailLogId: foundDetailLog.id,
+        },
+      });
+
+      return DetailLogDto.fromDetailLogIncludesImageRecipes(
+        userGoodLogs.detailLog as DetailLogWithImageRecipes,
+        user.id,
+      );
+    }
+    // if unlike
+    else {
+      // if not exists throw exception
+      try {
+      } catch (err) {
+        throw new BadRequestException('already UNLIKE');
+      }
+
+      await this.prismaService.userGoodLog.deleteMany({
+        where: {
+          userId: user.id,
+          detailLogId: detailLogId,
+        },
+      });
+
+      // delete한건 한번더 조회해야한다.
+      const detailLog = await this.prismaService.detailLog.findUnique({
+        include: {
+          image: true,
+          recipes: {
+            include: {
+              image: true,
+            },
+          },
+          scrapUsers: true,
+          goodUsers: true,
+        },
+        where: {
+          id: detailLogId,
+        },
+      });
+
+      return DetailLogDto.fromDetailLogIncludesImageRecipes(
+        detailLog as DetailLogWithImageRecipes,
+        user.id,
+      );
+    }
+  }
+
   async scrap(detailLogId: number, user: UserWithoutPassword, type: 'scrap' | 'unscrap') {
     const foundDetailLog = await this.findById(detailLogId, user);
 
@@ -271,6 +358,7 @@ export class DetailLogService {
                 },
               },
               scrapUsers: true,
+              goodUsers: true,
             },
           },
         },
@@ -311,6 +399,7 @@ export class DetailLogService {
             },
           },
           scrapUsers: true,
+          goodUsers: true,
         },
         where: {
           id: detailLogId,
@@ -337,6 +426,7 @@ export class DetailLogService {
           },
         },
         scrapUsers: true,
+        goodUsers: true,
       },
       where: {
         id: logId,
@@ -369,6 +459,7 @@ export class DetailLogService {
             },
           },
           scrapUsers: true,
+          goodUsers: true,
         },
         where: {
           userId: user.id,
@@ -422,6 +513,7 @@ export class DetailLogService {
           },
         },
         scrapUsers: true,
+        goodUsers: true,
       },
       where: {
         userId: user.id,

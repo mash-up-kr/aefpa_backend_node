@@ -97,6 +97,30 @@ export class DetailLogController {
     return await this.detailLogService.delete(id, user);
   }
 
+  @ApiOperation({ summary: '상세 끼록 좋아요' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: DetailLogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/like')
+  like(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.detailLogService.like(id, user, 'like');
+  }
+
+  @ApiOperation({ summary: '상세 끼록 좋아요 취소' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: DetailLogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/unlike')
+  cancelLike(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.detailLogService.like(id, user, 'unlike');
+  }
+
   @ApiOperation({ summary: '상세 끼록 스크랩' })
   @ApiBearerAuth('jwt')
   @ApiOkResponse({

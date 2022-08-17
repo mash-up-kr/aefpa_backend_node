@@ -119,12 +119,13 @@ model UserScrapLog {
 }
 
 model UserGoodLog {
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
-  log    Log  @relation(fields: [logId], references: [id])
-  logId  Int
-
-  @@id([userId, logId])
+  id          Int        @id @default(autoincrement())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      Int
+  log         Log?       @relation(fields: [logId], references: [id])
+  logId       Int?
+  detailLog   DetailLog? @relation(fields: [detailLogId], references: [id])
+  detailLogId Int?
 }
 
 model DetailLog {
@@ -140,6 +141,7 @@ model DetailLog {
   user        User?          @relation(fields: [userId], references: [id])
   userId      Int?
   scrapUsers  UserScrapLog[]
+  goodUsers   UserGoodLog[]
 }
 
 model Recipe {

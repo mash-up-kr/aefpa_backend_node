@@ -2,6 +2,7 @@ import { DetailLog } from '@/api/server/generated';
 import { RecipeDto } from '@/detail-log/dtos/recipe.dto';
 import { DetailLogWithImageRecipes } from '@/detail-log/types/detail-log.type';
 import { ImageDto } from '@/image/dtos/image.dto';
+import { LikeDto } from '@/log/dto/log-good.dto';
 import { encodeCursor } from '@/util/cursor-paginate';
 import { customPlainToInstance } from '@/util/plain-to-instance';
 import {
@@ -48,6 +49,9 @@ export class DetailLogDto {
   @IsOptional()
   cursor?: string;
 
+  @IsObject()
+  like: LikeDto;
+
   @IsBoolean()
   isScrapped: boolean;
 
@@ -56,8 +60,20 @@ export class DetailLogDto {
     loginId: number,
     cursorColumn?: keyof DetailLog,
   ): DetailLogDto {
-    const { id, title, description, image, ingredient, createdAt, updatedAt, recipes, scrapUsers } =
-      detailLog;
+    const {
+      id,
+      title,
+      description,
+      image,
+      ingredient,
+      createdAt,
+      updatedAt,
+      recipes,
+      goodUsers,
+      scrapUsers,
+    } = detailLog;
+
+    const isLoginUserLike = goodUsers.some((goodUser) => goodUser.userId === loginId);
 
     const isLoginUserScrap = scrapUsers.some((scrapUser) => scrapUser.userId === loginId);
 
@@ -85,6 +101,10 @@ export class DetailLogDto {
           }),
         ),
         cursor: encodeCursor(detailLog[cursorColumn] as number),
+        like: customPlainToInstance(LikeDto, {
+          count: goodUsers.length,
+          isLike: isLoginUserLike,
+        }),
         isScrapped: isLoginUserScrap,
       });
     }
@@ -111,6 +131,10 @@ export class DetailLogDto {
           }),
         }),
       ),
+      like: customPlainToInstance(LikeDto, {
+        count: goodUsers.length,
+        isLike: isLoginUserLike,
+      }),
       isScrapped: isLoginUserScrap,
     });
   }

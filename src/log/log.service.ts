@@ -200,12 +200,10 @@ export class LogService {
   async like(logId: number, user: UserWithoutPassword, type: 'like' | 'unlike') {
     const foundLog = await this.findById(logId, user);
 
-    const foundUserGoodLog = await this.prismaService.userGoodLog.findUnique({
+    const foundUserGoodLog = await this.prismaService.userGoodLog.findFirst({
       where: {
-        userId_logId: {
-          userId: user.id,
-          logId: logId,
-        },
+        userId: user.id,
+        logId: logId,
       },
     });
 
@@ -234,7 +232,7 @@ export class LogService {
         },
       });
 
-      return LogDto.fromLogIncludeImages(userGoodLogs.log, user.id);
+      return LogDto.fromLogIncludeImages(userGoodLogs.log as LogWithImages, user.id);
     }
     // if unlike
     else {
@@ -245,12 +243,10 @@ export class LogService {
         throw new BadRequestException('already UNLIKE');
       }
 
-      await this.prismaService.userGoodLog.delete({
+      await this.prismaService.userGoodLog.deleteMany({
         where: {
-          userId_logId: {
-            userId: user.id,
-            logId: logId,
-          },
+          logId: logId,
+          userId: user.id,
         },
       });
 
