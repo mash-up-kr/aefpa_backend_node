@@ -89,7 +89,7 @@ export class LogService {
           userId: user.id,
         },
         orderBy: {
-          createdAt: 'desc',
+          id: 'desc',
         },
       });
 

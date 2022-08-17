@@ -99,10 +99,10 @@ model Image {
   original  String      @db.VarChar(1024)
   w_256     String      @db.VarChar(1024)
   w_1024    String      @db.VarChar(1024)
-  log       Log?        @relation(fields: [logId], references: [id], onDelete: Cascade)
+  log       Log?        @relation(fields: [logId], references: [id])
   logId     Int?
   detailLog DetailLog[]
-  Recipe    Recipe[]
+  recipe    Recipe[]
 }
 
 model UserScrapLog {
@@ -141,7 +141,7 @@ model DetailLog {
 
 model Recipe {
   id          Int        @id @default(autoincrement())
-  step        Int        @db.SmallInt()
+  description String     @db.VarChar(3000)
   image       Image      @relation(fields: [imageId], references: [id])
   imageId     Int
   DetailLog   DetailLog? @relation(fields: [detailLogId], references: [id])
