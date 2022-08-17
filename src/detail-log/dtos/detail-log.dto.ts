@@ -7,6 +7,7 @@ import { customPlainToInstance } from '@/util/plain-to-instance';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsNumber,
   IsObject,
   IsOptional,
@@ -47,12 +48,18 @@ export class DetailLogDto {
   @IsOptional()
   cursor?: string;
 
+  @IsBoolean()
+  isScrapped: boolean;
+
   static fromDetailLogIncludesImageRecipes(
     detailLog: DetailLogWithImageRecipes,
     loginId: number,
     cursorColumn?: keyof DetailLog,
   ): DetailLogDto {
-    const { id, title, description, image, ingredient, createdAt, updatedAt, recipes } = detailLog;
+    const { id, title, description, image, ingredient, createdAt, updatedAt, recipes, scrapUsers } =
+      detailLog;
+
+    const isLoginUserScrap = scrapUsers.some((scrapUser) => scrapUser.userId === loginId);
 
     if (cursorColumn) {
       return customPlainToInstance(DetailLogDto, {
@@ -78,6 +85,7 @@ export class DetailLogDto {
           }),
         ),
         cursor: encodeCursor(detailLog[cursorColumn] as number),
+        isScrapped: isLoginUserScrap,
       });
     }
 
@@ -103,6 +111,7 @@ export class DetailLogDto {
           }),
         }),
       ),
+      isScrapped: isLoginUserScrap,
     });
   }
 }

@@ -3,10 +3,10 @@ import { CreateDetailLogDto } from '@/detail-log/dtos/request/create-detail-log.
 import { DetailLogDto } from '@/detail-log/dtos/detail-log.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CursorPaginationDetailLogResponseDto } from '@/detail-log/dtos/response/cursor-pagination-detail-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
-import { checkExists } from '@/common/error-util';
+import { checkExists, checkNotExists } from '@/common/error-util';
 import { DetailLogWithImageRecipes } from '@/detail-log/types/detail-log.type';
 import { ImageService } from '@/image/image.service';
 import { S3Service } from '@/s3/s3.service';
@@ -33,6 +33,7 @@ export class DetailLogService {
             image: true,
           },
         },
+        scrapUsers: true,
       },
       data: {
         title,
@@ -86,6 +87,7 @@ export class DetailLogService {
               image: true,
             },
           },
+          scrapUsers: true,
         },
         where: {
           userId: user.id,
@@ -112,6 +114,7 @@ export class DetailLogService {
             image: true,
           },
         },
+        scrapUsers: true,
       },
       where: {
         id,
@@ -238,6 +241,89 @@ export class DetailLogService {
     });
   }
 
+  async scrap(detailLogId: number, user: UserWithoutPassword, type: 'scrap' | 'unscrap') {
+    const foundDetailLog = await this.findById(detailLogId, user);
+
+    const foundUserScrapLog = await this.prismaService.userScrapLog.findFirst({
+      where: {
+        userId: user.id,
+        detailLogId: detailLogId,
+      },
+    });
+
+    // scrap
+    if (type === 'scrap') {
+      // if already exists throw exception
+      try {
+        checkNotExists(foundUserScrapLog, 'detail log');
+      } catch (err) {
+        throw new BadRequestException('already SCRAPPED');
+      }
+
+      const userScrapLog = await this.prismaService.userScrapLog.create({
+        include: {
+          detailLog: {
+            include: {
+              image: true,
+              recipes: {
+                include: {
+                  image: true,
+                },
+              },
+              scrapUsers: true,
+            },
+          },
+        },
+        data: {
+          userId: user.id,
+          detailLogId: foundDetailLog.id,
+        },
+      });
+
+      return DetailLogDto.fromDetailLogIncludesImageRecipes(
+        userScrapLog.detailLog as DetailLogWithImageRecipes,
+        user.id,
+      );
+    }
+    // unscrap
+    else {
+      // if not exists throw exception
+      try {
+        checkExists(foundUserScrapLog, 'log');
+      } catch (err) {
+        throw new BadRequestException('already UNSCRAPPED');
+      }
+
+      await this.prismaService.userScrapLog.deleteMany({
+        where: {
+          userId: user.id,
+          detailLogId: detailLogId,
+        },
+      });
+
+      // delete한건 한번더 조회해야한다.
+      const detailLog = await this.prismaService.detailLog.findUnique({
+        include: {
+          image: true,
+          recipes: {
+            include: {
+              image: true,
+            },
+          },
+          scrapUsers: true,
+        },
+        where: {
+          id: detailLogId,
+        },
+      });
+
+      return DetailLogDto.fromDetailLogIncludesImageRecipes(
+        detailLog as DetailLogWithImageRecipes,
+        user.id,
+      );
+    }
+  }
+
   private async checkAuthentication(
     user: UserWithoutPassword,
     logId: number,
@@ -250,6 +336,7 @@ export class DetailLogService {
             image: true,
           },
         },
+        scrapUsers: true,
       },
       where: {
         id: logId,
@@ -281,6 +368,7 @@ export class DetailLogService {
               image: true,
             },
           },
+          scrapUsers: true,
         },
         where: {
           userId: user.id,
@@ -333,6 +421,7 @@ export class DetailLogService {
             image: true,
           },
         },
+        scrapUsers: true,
       },
       where: {
         userId: user.id,

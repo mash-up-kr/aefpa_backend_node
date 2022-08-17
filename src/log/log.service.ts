@@ -76,7 +76,9 @@ export class LogService {
           },
         });
 
-        return foundLogs.map((foundLog) => LogDto.fromLogIncludeImages(foundLog.log, user.id));
+        return foundLogs.map((foundLog) =>
+          LogDto.fromLogIncludeImages(foundLog.log as LogWithImages, user.id),
+        );
       }
       // logs
       const foundLogs = await this.prismaService.log.findMany({
@@ -271,12 +273,10 @@ export class LogService {
   async scrap(logId: number, user: UserWithoutPassword, type: 'scrap' | 'unscrap') {
     const foundLog = await this.findById(logId, user);
 
-    const foundUserScrapLog = await this.prismaService.userScrapLog.findUnique({
+    const foundUserScrapLog = await this.prismaService.userScrapLog.findFirst({
       where: {
-        userId_logId: {
-          userId: user.id,
-          logId: logId,
-        },
+        userId: user.id,
+        logId: logId,
       },
     });
 
@@ -305,7 +305,7 @@ export class LogService {
         },
       });
 
-      return LogDto.fromLogIncludeImages(userScrapLog.log, user.id);
+      return LogDto.fromLogIncludeImages(userScrapLog.log as LogWithImages, user.id);
     }
     // unscrap
     else {
@@ -316,12 +316,10 @@ export class LogService {
         throw new BadRequestException('already UNSCRAPPED');
       }
 
-      await this.prismaService.userScrapLog.delete({
+      await this.prismaService.userScrapLog.deleteMany({
         where: {
-          userId_logId: {
-            userId: user.id,
-            logId: logId,
-          },
+          logId: logId,
+          userId: user.id,
         },
       });
 
@@ -415,7 +413,7 @@ export class LogService {
           foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].createdAt) : null;
 
         return CursorPaginationLogResponseDto.fromLogIncludeImages(
-          foundLogs.map((foundLog) => foundLog.log),
+          foundLogs.map((foundLog) => foundLog.log) as LogWithImages[],
           user.id,
           {
             pageSize,
@@ -516,7 +514,7 @@ export class LogService {
         foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].createdAt) : null;
 
       return CursorPaginationLogResponseDto.fromLogIncludeImages(
-        foundLogs.map((foundLog) => foundLog.log),
+        foundLogs.map((foundLog) => foundLog.log) as LogWithImages[],
         user.id,
         {
           pageSize,

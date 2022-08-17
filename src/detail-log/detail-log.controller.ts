@@ -96,4 +96,28 @@ export class DetailLogController {
   async delete(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
     return await this.detailLogService.delete(id, user);
   }
+
+  @ApiOperation({ summary: '상세 끼록 스크랩' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: DetailLogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/scrap')
+  scrap(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.detailLogService.scrap(id, user, 'scrap');
+  }
+
+  @ApiOperation({ summary: '상세 끼록 스크랩 취소' })
+  @ApiBearerAuth('jwt')
+  @ApiOkResponse({
+    description: '성공',
+    type: DetailLogResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/unscrap')
+  cancelScrap(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
+    return this.detailLogService.scrap(id, user, 'unscrap');
+  }
 }
