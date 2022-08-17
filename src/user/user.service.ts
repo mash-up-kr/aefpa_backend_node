@@ -1,13 +1,16 @@
 import { CharacterType, Follows, Prisma } from '@/api/server/generated';
 import { CharacterService } from '@/character/character.service';
+import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { checkExists } from '@/common/error-util';
 import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
+import { CursorPaginationUserScrapLogResponseDto } from '@/user/dtos/cursor-pagination-user-scrap-log-response.dto';
 import { UserProfileWithFollowsResponse } from '@/user/entity/user-profile-with-follows.response';
 import { UserProfileResponse } from '@/user/entity/user-profile.response';
 import { UserWithFollowingResponse } from '@/user/entity/user-with-following.response';
 import { UserEntity } from '@/user/entity/user.entity';
 import { FriendType } from '@/user/user.types';
+import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
 import { ConflictException, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -156,7 +159,12 @@ export class UserService {
     };
   }
 
-  async getUserProfileWithFollows(userId: number): Promise<UserProfileWithFollowsResponse> {
+  async getUserProfileWithFollows(
+    userId: number,
+    cursorPaginationRequestDto: CursorPaginationRequestDto,
+  ): Promise<UserProfileWithFollowsResponse> {
+    const { pageSize, endCursor } = cursorPaginationRequestDto;
+
     const profile = await this.getUserProfile(userId);
 
     const followerCount = await this.prismaService.follows.count({
@@ -167,16 +175,115 @@ export class UserService {
       where: { followerId: userId },
     });
 
+    const scrappedLogs = await this.findAllByCursorPagination(userId, pageSize, endCursor);
+
     return {
       ...profile,
       followerCount,
       followingCount,
+      scrappedLogs,
     };
   }
 
   async deleteUser(userId: number) {
     return await this.prismaService.user.delete({
       where: { id: userId },
+    });
+  }
+
+  // find all by cursor pagination
+  private async findAllByCursorPagination(userId: number, pageSize: number, endCursor?: string) {
+    // first page
+    if (!endCursor) {
+      const foundUserScrapLogs = await this.prismaService.userScrapLog.findMany({
+        take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나더 조회
+        include: {
+          log: true,
+          detailLog: true,
+        },
+        where: {
+          userId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      // get hasNextPage
+      let hasNextPage = false;
+
+      if (pageSize + 1 === foundUserScrapLogs.length) {
+        hasNextPage = true;
+        foundUserScrapLogs.pop(); // 다음 페이지 존재하면 pop
+      }
+
+      // get has totalCount
+      const totalCount = await this.prismaService.userScrapLog.count({
+        where: {
+          userId,
+        },
+      });
+
+      //get endCursor
+      const endCursor =
+        foundUserScrapLogs.length > 0
+          ? encodeCursor(foundUserScrapLogs[foundUserScrapLogs.length - 1].createdAt)
+          : null;
+
+      return CursorPaginationUserScrapLogResponseDto.fromUserScrapLog(foundUserScrapLogs, {
+        pageSize,
+        hasNextPage,
+        endCursor,
+        totalCount,
+      });
+    }
+
+    //  after second page...
+    const decodedEndCursor = decodeCursor('Date', endCursor) as Date;
+
+    const foundUserScrapLogs = await this.prismaService.userScrapLog.findMany({
+      take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나 더 조회
+      include: {
+        log: true,
+        detailLog: true,
+      },
+      where: {
+        userId,
+        createdAt: {
+          lt: decodedEndCursor,
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // get hasNextPage
+    let hasNextPage = false;
+
+    if (pageSize + 1 === foundUserScrapLogs.length) {
+      hasNextPage = true;
+      foundUserScrapLogs.pop(); // 다음 페이지 존재하면 pop
+    }
+
+    // get has totalCount
+    const totalCount = await this.prismaService.userScrapLog.count({
+      where: {
+        userId,
+      },
+    });
+
+    //get endCursor
+    const endCursorResult =
+      foundUserScrapLogs.length > 0
+        ? encodeCursor(foundUserScrapLogs[foundUserScrapLogs.length - 1].createdAt)
+        : null;
+
+    return CursorPaginationUserScrapLogResponseDto.fromUserScrapLog(foundUserScrapLogs, {
+      pageSize,
+      hasNextPage,
+      endCursor: endCursorResult,
+      totalCount,
     });
   }
 }
