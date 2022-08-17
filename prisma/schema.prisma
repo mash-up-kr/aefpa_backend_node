@@ -109,9 +109,9 @@ model UserScrapLog {
   id          Int        @id @default(autoincrement())
   user        User       @relation(fields: [userId], references: [id])
   userId      Int
-  log         Log?       @relation(fields: [logId], references: [id])
+  log         Log?       @relation(fields: [logId], references: [id], onDelete: Cascade)
   logId       Int?
-  detailLog   DetailLog? @relation(fields: [detailLogId], references: [id])
+  detailLog   DetailLog? @relation(fields: [detailLogId], references: [id], onDelete: Cascade)
   detailLogId Int?
   createdAt   DateTime   @default(now())
 
@@ -122,9 +122,9 @@ model UserGoodLog {
   id          Int        @id @default(autoincrement())
   user        User       @relation(fields: [userId], references: [id])
   userId      Int
-  log         Log?       @relation(fields: [logId], references: [id])
+  log         Log?       @relation(fields: [logId], references: [id], onDelete: Cascade)
   logId       Int?
-  detailLog   DetailLog? @relation(fields: [detailLogId], references: [id])
+  detailLog   DetailLog? @relation(fields: [detailLogId], references: [id], onDelete: Cascade)
   detailLogId Int?
 }
 
