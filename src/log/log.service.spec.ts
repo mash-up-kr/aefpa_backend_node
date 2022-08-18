@@ -2,6 +2,7 @@ import { ErrorMessages } from '@/common/error-messages';
 import { ImageService } from '@/image/image.service';
 import { LogService } from '@/log/log.service';
 import { PrismaService } from '@/prisma/prisma.service';
+import { S3Service } from '@/s3/s3.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -21,10 +22,13 @@ const mockPrismaService = {
 
 const mockImageService = {} as MockServiceType<ImageService>;
 
+const mockS3Service = {} as MockServiceType<S3Service>;
+
 describe(' Test suite', () => {
   let logService: LogService;
   let prismaService: typeof mockPrismaService;
   let imageService: typeof mockImageService;
+  let s3Service: typeof mockS3Service;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -38,12 +42,17 @@ describe(' Test suite', () => {
           provide: ImageService,
           useValue: mockImageService,
         },
+        {
+          provide: S3Service,
+          useValue: mockS3Service,
+        },
       ],
     }).compile();
 
     logService = module.get<LogService>(LogService);
     prismaService = module.get<PrismaService, MockPrismaServiceType>(PrismaService);
     imageService = module.get<ImageService, MockServiceType>(ImageService);
+    s3Service = module.get<S3Service, MockServiceType>(S3Service);
   });
   it('좋아요 및 스크랩 큰 변화로 잠시 아래 테스트 주석', () => {
     expect(1 + 1).toEqual(2);
