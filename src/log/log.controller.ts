@@ -1,6 +1,6 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
-import { ApiImages } from '@/common/decorators/file.decorator';
+import { imageFileFilter } from '@/common/decorators/file.decorator';
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
 import { CreateLogDto } from '@/log/dto/request/create-log.dto';
 import { UpdateLogDto } from '@/log/dto/request/update-log.dto';
@@ -21,11 +21,20 @@ import {
   Req,
   UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
 import { LogResponseDto } from '@/log/dto/response/log-response.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('끼록 > 간단 끼록')
 @Controller('logs')
@@ -34,10 +43,34 @@ export class LogController {
 
   @ApiOperation({ summary: '간단 끼록 생성' })
   @ApiBearerAuth('jwt')
+  @ApiBody({ type: CreateLogDto })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FilesInterceptor('images', undefined, {
+      fileFilter: imageFileFilter,
+      limits: {
+        fileSize: 1048576, // 10 M
+      },
+    }),
+  )
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() createLogDto: CreateLogDto, @User() user: UserWithoutPassword) {
-    return await this.logService.create(createLogDto, user);
+  async create(
+    @Req() req: FileValidationErrorReqType,
+    @User() user: UserWithoutPassword,
+    @Body() createLogDto: CreateLogDto,
+    @UploadedFiles()
+    images: Express.Multer.File[],
+  ) {
+    if (!images || images.length === 0) {
+      throw new BadRequestException('you should upload at least one image');
+    }
+
+    if (req.fileValidationError) {
+      throw new BadRequestException(req.fileValidationError);
+    }
+
+    return await this.logService.create(createLogDto, images, user);
   }
 
   @ApiOperation({ summary: '간단 끼록 목록 조회(페이지네이션)' })
@@ -54,21 +87,6 @@ export class LogController {
   ) {
     return await this.logService.findAll(cursorPaginationRequestDto, user);
   }
-
-  // @ApiOperation({ summary: '간단 끼록 스크랩 목록 조회(페이지네이션)' })
-  // @ApiBearerAuth('jwt')
-  // @ApiOkResponse({
-  //   description: '성공',
-  //   type: CursorPaginationLogResponseDto,
-  // })
-  // @UseGuards(JwtAuthGuard)
-  // @Get('/scrap')
-  // findAllByScrap(
-  //   @Query() cursorPaginationRequestDto: CursorPaginationRequestDto,
-  //   @User() user: UserWithoutPassword,
-  // ) {
-  //   return this.logService.findAll(cursorPaginationRequestDto, user, true);
-  // }
 
   @ApiOperation({ summary: '간단 끼록 하나 조회' })
   @ApiBearerAuth('jwt')
@@ -100,27 +118,6 @@ export class LogController {
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
     return await this.logService.delete(id, user);
-  }
-
-  @ApiOperation({ summary: '간단 끼록 이미지 업로드' })
-  @ApiBearerAuth('jwt')
-  @UseGuards(JwtAuthGuard)
-  @Post('upload-image')
-  @ApiImages('images')
-  upload(
-    @Req() req: FileValidationErrorReqType,
-    @UploadedFiles()
-    images: Express.Multer.File[],
-  ) {
-    if (!images || images.length === 0) {
-      throw new BadRequestException('you should upload at least one image');
-    }
-
-    if (req.fileValidationError) {
-      throw new BadRequestException('file only allowed image file (file ext: jpg, jpeg, png, gif)');
-    }
-
-    return this.s3Service.upload(images, 'log');
   }
 
   @ApiOperation({ summary: '간단 끼록 좋아요' })

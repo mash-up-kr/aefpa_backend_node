@@ -10,16 +10,24 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
+import { S3Service } from '@/s3/s3.service';
 
 @Injectable()
 export class LogService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly imageService: ImageService,
+    private readonly s3Service: S3Service,
   ) {}
 
-  async create(createLogDto: CreateLogDto, user: UserWithoutPassword): Promise<LogDto> {
-    const { title, description, kick, images: imageUrls } = createLogDto;
+  async create(
+    createLogDto: CreateLogDto,
+    images: Express.Multer.File[],
+    user: UserWithoutPassword,
+  ): Promise<LogDto> {
+    const { title, description, kick } = createLogDto;
+
+    const uploadedImages = await this.s3Service.upload(images, 'log');
 
     const log = await this.prismaService.log.create({
       include: { images: true, goodUsers: true, scrapUsers: true },
@@ -33,7 +41,7 @@ export class LogService {
           },
         },
         images: {
-          create: imageUrls.map((imageUrl) => {
+          create: uploadedImages.map((imageUrl) => {
             return {
               original: imageUrl.original,
               w_256: imageUrl.w256,
