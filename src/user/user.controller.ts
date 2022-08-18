@@ -1,5 +1,6 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
+import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { FollowRequest } from '@/user/entity/follow.request';
 import { FriendsListRequest } from '@/user/entity/friends-list.request';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
@@ -40,8 +41,11 @@ export class UserController {
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get('')
-  async getUserProfile(@User() user: UserWithoutPassword) {
-    return await this.userService.getUserProfileWithFollows(user.id);
+  async getUserProfile(
+    @Query() cursorPaginationRequestDto: CursorPaginationRequestDto,
+    @User() user: UserWithoutPassword,
+  ) {
+    return await this.userService.getUserProfileWithFollows(user.id, cursorPaginationRequestDto);
   }
 
   @ApiOperation({ summary: '유저 삭제' })

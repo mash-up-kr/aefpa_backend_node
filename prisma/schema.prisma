@@ -26,6 +26,7 @@ model User {
   goodLogs      UserGoodLog[]
   followedBy    Follows[]      @relation("following")
   following     Follows[]      @relation("follower")
+  detailLogs    DetailLog[]
 }
 
 model Follows {
@@ -95,30 +96,60 @@ model Log {
 }
 
 model Image {
-  id       Int    @id @default(autoincrement())
-  original String @db.VarChar(1024)
-  w_256    String @db.VarChar(1024)
-  w_1024   String @db.VarChar(1024)
-  log      Log?   @relation(fields: [logId], references: [id], onDelete: Cascade)
-  logId    Int?
+  id        Int         @id @default(autoincrement())
+  original  String      @db.VarChar(1024)
+  w_256     String      @db.VarChar(1024)
+  w_1024    String      @db.VarChar(1024)
+  log       Log?        @relation(fields: [logId], references: [id])
+  logId     Int?
+  detailLog DetailLog[]
+  recipe    Recipe[]
 }
 
 model UserScrapLog {
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  log       Log      @relation(fields: [logId], references: [id])
-  logId     Int
-  createdAt DateTime @default(now())
+  id          Int        @id @default(autoincrement())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      Int
+  log         Log?       @relation(fields: [logId], references: [id], onDelete: Cascade)
+  logId       Int?
+  detailLog   DetailLog? @relation(fields: [detailLogId], references: [id], onDelete: Cascade)
+  detailLogId Int?
+  createdAt   DateTime   @default(now())
 
-  @@id([userId, logId])
   @@index([createdAt])
 }
 
 model UserGoodLog {
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
-  log    Log  @relation(fields: [logId], references: [id])
-  logId  Int
+  id          Int        @id @default(autoincrement())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      Int
+  log         Log?       @relation(fields: [logId], references: [id], onDelete: Cascade)
+  logId       Int?
+  detailLog   DetailLog? @relation(fields: [detailLogId], references: [id], onDelete: Cascade)
+  detailLogId Int?
+}
 
-  @@id([userId, logId])
+model DetailLog {
+  id          Int            @id @default(autoincrement())
+  title       String         @db.VarChar(15)
+  description String         @db.VarChar(20)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  image       Image          @relation(fields: [imageId], references: [id])
+  imageId     Int
+  recipes     Recipe[]
+  ingredient  String         @db.VarChar(3000)
+  user        User?          @relation(fields: [userId], references: [id])
+  userId      Int?
+  scrapUsers  UserScrapLog[]
+  goodUsers   UserGoodLog[]
+}
+
+model Recipe {
+  id          Int        @id @default(autoincrement())
+  description String     @db.VarChar(3000)
+  image       Image      @relation(fields: [imageId], references: [id])
+  imageId     Int
+  DetailLog   DetailLog? @relation(fields: [detailLogId], references: [id])
+  detailLogId Int?
 }

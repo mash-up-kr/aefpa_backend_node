@@ -11,6 +11,7 @@ import configuration from './config';
 import { HomeModule } from './home/home.module';
 import { ImageModule } from './image/image.module';
 import { S3Module } from './s3/s3.module';
+import { DetailLogModule } from './detail-log/detail-log.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { S3Module } from './s3/s3.module';
     ImageModule,
     S3Module,
     HomeModule,
+    DetailLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

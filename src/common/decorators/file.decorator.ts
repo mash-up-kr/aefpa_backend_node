@@ -1,6 +1,6 @@
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
 import { applyDecorators, UseInterceptors } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 
