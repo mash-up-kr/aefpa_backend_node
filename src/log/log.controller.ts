@@ -1,6 +1,6 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
-import { ApiImages, imageFileFilter } from '@/common/decorators/file.decorator';
+import { imageFileFilter } from '@/common/decorators/file.decorator';
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
 import { CreateLogDto } from '@/log/dto/request/create-log.dto';
 import { UpdateLogDto } from '@/log/dto/request/update-log.dto';
@@ -67,7 +67,7 @@ export class LogController {
     }
 
     if (req.fileValidationError) {
-      throw new BadRequestException('file only allowed image file (file ext: jpg, jpeg, png, gif)');
+      throw new BadRequestException(req.fileValidationError);
     }
 
     return await this.logService.create(createLogDto, images, user);

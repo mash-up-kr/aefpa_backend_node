@@ -41,8 +41,21 @@ export const imageFileFilter = (
   file: Express.Multer.File,
   callback: any,
 ) => {
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-    req.fileValidationError = 'only image file allowed';
+  if (
+    ![
+      'image/gif',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/pipeg',
+      'image/bmp',
+      'image/webp',
+      'image/tiff',
+      'image/svg+xml',
+      'image/heic',
+    ].includes(file.mimetype)
+  ) {
+    req.fileValidationError = `허용되지 않은 minetype입니다. ${file.mimetype}`;
     return callback(null, false);
   }
   callback(null, true);
