@@ -1,5 +1,5 @@
 import { LogDto } from '@/log/dto/log.dto';
-import { OmitType } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 
 export class CreateLogDto extends OmitType(LogDto, [
   'id',
@@ -8,4 +8,12 @@ export class CreateLogDto extends OmitType(LogDto, [
   'cursor',
   'like',
   'isScrapped',
-]) {}
+  'images',
+]) {
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
+    multipleOf: 1,
+  })
+  images: any;
+}
