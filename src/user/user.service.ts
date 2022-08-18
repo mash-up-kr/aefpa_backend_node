@@ -5,6 +5,7 @@ import { checkExists } from '@/common/error-util';
 import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CursorPaginationUserScrapLogResponseDto } from '@/user/dtos/cursor-pagination-user-scrap-log-response.dto';
+import { UserScrapLogDto } from '@/user/dtos/user-scrap-log.dto';
 import { UserProfileWithFollowsResponse } from '@/user/entity/user-profile-with-follows.response';
 import { UserProfileResponse } from '@/user/entity/user-profile.response';
 import { UserWithFollowingResponse } from '@/user/entity/user-with-following.response';
@@ -161,12 +162,7 @@ export class UserService {
     };
   }
 
-  async getUserProfileWithFollows(
-    userId: number,
-    cursorPaginationRequestDto: CursorPaginationRequestDto,
-  ): Promise<UserProfileWithFollowsResponse> {
-    const { pageSize, endCursor } = cursorPaginationRequestDto;
-
+  async getUserProfileWithFollows(userId: number): Promise<UserProfileWithFollowsResponse> {
     const profile = await this.getUserProfile(userId);
 
     const followerCount = await this.prismaService.follows.count({
@@ -177,13 +173,34 @@ export class UserService {
       where: { followerId: userId },
     });
 
-    const scrappedLogs = await this.findAllByCursorPagination(userId, pageSize, endCursor);
+    const scrappedLogs = await this.prismaService.userScrapLog.findMany({
+      include: {
+        log: {
+          include: {
+            images: true,
+          },
+        },
+        detailLog: {
+          include: {
+            image: true,
+          },
+        },
+      },
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
     return {
       ...profile,
       followerCount,
       followingCount,
-      scrappedLogs,
+      scrappedLogs: scrappedLogs.map((scrappedLog) =>
+        UserScrapLogDto.fromUserScrapLog(scrappedLog),
+      ),
     };
   }
 
@@ -200,8 +217,16 @@ export class UserService {
       const foundUserScrapLogs = await this.prismaService.userScrapLog.findMany({
         take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나더 조회
         include: {
-          log: true,
-          detailLog: true,
+          log: {
+            include: {
+              images: true,
+            },
+          },
+          detailLog: {
+            include: {
+              image: true,
+            },
+          },
         },
         where: {
           userId,
@@ -246,8 +271,16 @@ export class UserService {
     const foundUserScrapLogs = await this.prismaService.userScrapLog.findMany({
       take: pageSize + 1, // 다음 페이지 존재 여부를 확인하기 위해 하나 더 조회
       include: {
-        log: true,
-        detailLog: true,
+        log: {
+          include: {
+            images: true,
+          },
+        },
+        detailLog: {
+          include: {
+            image: true,
+          },
+        },
       },
       where: {
         userId,
