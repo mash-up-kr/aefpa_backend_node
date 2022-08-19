@@ -5,6 +5,7 @@ import { ImageDto } from '@/image/dtos/image.dto';
 import { LikeDto } from '@/log/dto/log-good.dto';
 import { encodeCursor } from '@/util/cursor-paginate';
 import { customPlainToInstance } from '@/util/plain-to-instance';
+import { Transform } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
@@ -37,9 +38,9 @@ export class DetailLogDto {
   description: string;
 
   @IsArray()
-  // @ValidateNested({ each: true })
+  @IsString({ each: true })
   @ArrayMinSize(1)
-  ingredient: string[];
+  ingredients: string[];
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -84,7 +85,7 @@ export class DetailLogDto {
         updatedAt: moment(updatedAt).format(),
         title,
         description,
-        ingredient: ingredient.split(','),
+        ingredients: ingredient.split(','),
         image: customPlainToInstance(ImageDto, {
           original: image.original,
           w256: image.w_256,
@@ -115,7 +116,7 @@ export class DetailLogDto {
       updatedAt: moment(updatedAt).format(),
       title,
       description,
-      ingredient: ingredient.split(','),
+      ingredients: ingredient.split(','),
       image: customPlainToInstance(ImageDto, {
         original: image.original,
         w256: image.w_256,
