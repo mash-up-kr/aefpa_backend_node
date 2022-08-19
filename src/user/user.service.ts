@@ -153,7 +153,7 @@ export class UserService {
     const type = found.userCharacter!.characterType;
 
     return {
-      logStats: await this.logStatsService.getLogStats(userId),
+      logStats: await this.logStatsService.getLogStats(userId, true),
       email: found.email,
       name: found.userProfile?.nickname ?? '',
       type,
