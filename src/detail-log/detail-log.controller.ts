@@ -1,6 +1,5 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
-import { ApiImages } from '@/common/decorators/file.decorator';
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
 import { DetailLogService } from '@/detail-log/detail-log.service';
@@ -22,8 +21,17 @@ import {
   Req,
   UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('끼록 > 상세 끼록')
 @Controller('detail-log')
@@ -35,10 +43,50 @@ export class DetailLogController {
 
   @ApiOperation({ summary: '상세 끼록 생성' })
   @ApiBearerAuth('jwt')
+  @ApiBody({ type: CreateDetailLogDto })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'brandImage', maxCount: 1 },
+      { name: 'recipeImages', maxCount: 100 },
+    ]),
+  )
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() createDetailLogDto: CreateDetailLogDto, @User() user: UserWithoutPassword) {
-    return await this.detailLogService.create(createDetailLogDto, user);
+  async create(
+    @Req() req: FileValidationErrorReqType,
+    @User() user: UserWithoutPassword,
+    @Body() createDetailLogDto: CreateDetailLogDto,
+    @UploadedFiles()
+    files: {
+      brandImage: Express.Multer.File[];
+      recipeImages: Express.Multer.File[];
+    },
+  ) {
+    const { brandImage, recipeImages } = files;
+
+    if (!brandImage || brandImage.length > 1) {
+      throw new BadRequestException('you should upload one brandImage');
+    }
+
+    if (!recipeImages || recipeImages.length === 0) {
+      throw new BadRequestException('you should upload at least one recipeImages');
+    }
+
+    if (createDetailLogDto.recipes?.length !== recipeImages.length) {
+      throw new BadRequestException('요청한 레시피 수와 업로드할 레시피 이미지 수가 다릅니다.');
+    }
+
+    if (req.fileValidationError) {
+      throw new BadRequestException(req.fileValidationError);
+    }
+
+    return await this.detailLogService.create(
+      createDetailLogDto,
+      brandImage[0],
+      recipeImages,
+      user,
+    );
   }
 
   @ApiOperation({ summary: '상세 끼록 목록 조회(페이지네이션)' })
@@ -66,27 +114,6 @@ export class DetailLogController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
     return await this.detailLogService.findById(id, user);
-  }
-
-  @ApiOperation({ summary: '상세 끼록 이미지 업로드' })
-  @ApiBearerAuth('jwt')
-  @UseGuards(JwtAuthGuard)
-  @Post('upload-image')
-  @ApiImages('images')
-  upload(
-    @Req() req: FileValidationErrorReqType,
-    @UploadedFiles()
-    images: Express.Multer.File[],
-  ) {
-    if (!images || images.length === 0) {
-      throw new BadRequestException('you should upload at least two images');
-    }
-
-    if (req.fileValidationError) {
-      throw new BadRequestException('file only allowed image file (file ext: jpg, jpeg, png, gif)');
-    }
-
-    return this.s3Service.upload(images, 'recipe');
   }
 
   @ApiOperation({ summary: '상세 끼록 삭제' })

@@ -3,13 +3,19 @@ import { CreateDetailLogDto } from '@/detail-log/dtos/request/create-detail-log.
 import { DetailLogDto } from '@/detail-log/dtos/detail-log.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CursorPaginationDetailLogResponseDto } from '@/detail-log/dtos/response/cursor-pagination-detail-log-response.dto';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
 import { checkExists, checkNotExists } from '@/common/error-util';
 import { DetailLogWithImageRecipes } from '@/detail-log/types/detail-log.type';
 import { ImageService } from '@/image/image.service';
 import { S3Service } from '@/s3/s3.service';
+import { RecipeDto } from '@/detail-log/dtos/recipe.dto';
 
 @Injectable()
 export class DetailLogService {
@@ -21,9 +27,38 @@ export class DetailLogService {
 
   async create(
     createDetailLogDto: CreateDetailLogDto,
+    brandImage: Express.Multer.File,
+    recipeImages: Express.Multer.File[],
     user: UserWithoutPassword,
   ): Promise<DetailLogDto> {
-    const { title, description, ingredient, recipes, image } = createDetailLogDto;
+    const { title, description, ingredients: ingredient, recipes } = createDetailLogDto;
+
+    const uploadedBrandImage = await this.s3Service.upload([brandImage], 'recipe');
+    const uploadedRecipeImages = await this.s3Service.upload(recipeImages, 'recipe');
+
+    if (uploadedRecipeImages.length !== recipes.length) {
+      throw new InternalServerErrorException(
+        '요청한 레시피 수와 업로드된 레시피 이미지 수가 다릅니다.',
+      );
+    }
+
+    const createdRecipes: RecipeDto[] = [];
+
+    for (let i = 0; i < recipes.length; i++) {
+      const recipe = recipes[i];
+      const uploadedRecipeImage = uploadedRecipeImages[i];
+
+      const createdRecipe: RecipeDto = {
+        description: recipe,
+        image: {
+          original: uploadedRecipeImage.original,
+          w256: uploadedRecipeImage.w256,
+          w1024: uploadedRecipeImage.w1024,
+        },
+      };
+
+      createdRecipes.push(createdRecipe);
+    }
 
     const detailLog = await this.prismaService.detailLog.create({
       include: {
@@ -47,13 +82,13 @@ export class DetailLogService {
         },
         image: {
           create: {
-            original: image.original,
-            w_256: image.w256,
-            w_1024: image.w1024,
+            original: uploadedBrandImage[0].original,
+            w_256: uploadedBrandImage[0].w256,
+            w_1024: uploadedBrandImage[0].w1024,
           },
         },
         recipes: {
-          create: recipes.map((recipe) => {
+          create: createdRecipes.map((recipe) => {
             return {
               description: recipe.description,
               image: {
