@@ -1,5 +1,6 @@
 import { CharacterType, Follows, Prisma } from '@/api/server/generated';
 import { CharacterService } from '@/character/character.service';
+import { CharacterStatus } from '@/character/character.types';
 import { checkExists } from '@/common/error-util';
 import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -92,7 +93,7 @@ export class UserService {
     return {
       id: following.id,
       name: following.userProfile!.nickname,
-      imageUrl: this.characterService.getFullCharacterImageUrl(
+      imageUrl: this.characterService.getMiniCharacterImageUrl(
         following.userCharacter!.characterType,
       ),
     };
@@ -139,7 +140,7 @@ export class UserService {
     });
   }
 
-  async getUserProfile(userId: number): Promise<UserProfileResponse> {
+  async getUserProfile(userId: number, status?: CharacterStatus): Promise<UserProfileResponse> {
     const found = checkExists(
       await this.prismaService.user.findUnique({
         where: { id: userId },
@@ -156,20 +157,16 @@ export class UserService {
     const logStats = await this.logStatsService.getLogStats(userId, true);
 
     return {
-<<<<<<< Updated upstream
-      logStats: await this.logStatsService.getLogStats(userId, true),
-=======
-<<<<<<< Updated upstream
-      logStats: await this.logStatsService.getLogStats(userId),
-=======
       logStats,
->>>>>>> Stashed changes
->>>>>>> Stashed changes
       email: found.email,
       name: found.userProfile?.nickname ?? '',
       type,
-      miniImageUrl: this.characterService.getFullCharacterImageUrl(type, 0, 'mini'),
-      fullImageUrl: this.characterService.getFullCharacterImageUrl(type, logStats.level, 'full'),
+      miniImageUrl: this.characterService.getMiniCharacterImageUrl(type),
+      fullImageUrl: this.characterService.getFullCharacterImageUrl(
+        type,
+        logStats.level,
+        status ?? 'happy',
+      ),
     };
   }
 

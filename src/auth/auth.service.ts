@@ -138,6 +138,8 @@ export class AuthService {
     });
 
     const code = this.randomService.getRandomAuthCode(6);
+    console.log(`code: ${code}`);
+
     const expiredAt = moment().utc().add(10, 'minutes').format();
 
     await this.prismaService.userCode.create({
