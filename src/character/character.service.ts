@@ -32,8 +32,14 @@ export class CharacterService {
       : 'sad';
   }
 
-  getCharacterImageUrl(type: CharacterType, size: 'mini' | 'full' = 'mini') {
-    return this.s3Service.getUrl(`static/character/${size}/${type.toLowerCase()}.png`);
+  getMiniCharacterImageUrl(type: CharacterType) {
+    return this.s3Service.getUrl(`static/character/mini/${type.toLowerCase()}.png`);
+  }
+
+  getFullCharacterImageUrl(type: CharacterType, level: number, status: CharacterStatus) {
+    return this.s3Service.getUrl(
+      `static/character/full/${type.toLowerCase()}_${level}_${status}.png`,
+    );
   }
 
   getPhrase(type: CharacterType, status: CharacterStatus) {

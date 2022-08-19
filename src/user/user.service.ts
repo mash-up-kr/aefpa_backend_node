@@ -1,6 +1,6 @@
 import { CharacterType, Follows, Prisma } from '@/api/server/generated';
 import { CharacterService } from '@/character/character.service';
-import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
+import { CharacterStatus } from '@/character/character.types';
 import { checkExists } from '@/common/error-util';
 import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -93,7 +93,9 @@ export class UserService {
     return {
       id: following.id,
       name: following.userProfile!.nickname,
-      imageUrl: this.characterService.getCharacterImageUrl(following.userCharacter!.characterType),
+      imageUrl: this.characterService.getMiniCharacterImageUrl(
+        following.userCharacter!.characterType,
+      ),
     };
   }
 
@@ -138,7 +140,7 @@ export class UserService {
     });
   }
 
-  async getUserProfile(userId: number): Promise<UserProfileResponse> {
+  async getUserProfile(userId: number, status?: CharacterStatus): Promise<UserProfileResponse> {
     const found = checkExists(
       await this.prismaService.user.findUnique({
         where: { id: userId },
@@ -152,13 +154,19 @@ export class UserService {
 
     const type = found.userCharacter!.characterType;
 
+    const logStats = await this.logStatsService.getLogStats(userId, true);
+
     return {
-      logStats: await this.logStatsService.getLogStats(userId, true),
+      logStats,
       email: found.email,
       name: found.userProfile?.nickname ?? '',
       type,
-      miniImageUrl: this.characterService.getCharacterImageUrl(type, 'mini'),
-      fullImageUrl: this.characterService.getCharacterImageUrl(type, 'full'),
+      miniImageUrl: this.characterService.getMiniCharacterImageUrl(type),
+      fullImageUrl: this.characterService.getFullCharacterImageUrl(
+        type,
+        logStats.level,
+        status ?? 'happy',
+      ),
     };
   }
 
