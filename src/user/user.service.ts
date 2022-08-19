@@ -1,6 +1,5 @@
 import { CharacterType, Follows, Prisma } from '@/api/server/generated';
 import { CharacterService } from '@/character/character.service';
-import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { checkExists } from '@/common/error-util';
 import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -93,7 +92,9 @@ export class UserService {
     return {
       id: following.id,
       name: following.userProfile!.nickname,
-      imageUrl: this.characterService.getCharacterImageUrl(following.userCharacter!.characterType),
+      imageUrl: this.characterService.getFullCharacterImageUrl(
+        following.userCharacter!.characterType,
+      ),
     };
   }
 
@@ -152,13 +153,23 @@ export class UserService {
 
     const type = found.userCharacter!.characterType;
 
+    const logStats = await this.logStatsService.getLogStats(userId, true);
+
     return {
+<<<<<<< Updated upstream
       logStats: await this.logStatsService.getLogStats(userId, true),
+=======
+<<<<<<< Updated upstream
+      logStats: await this.logStatsService.getLogStats(userId),
+=======
+      logStats,
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
       email: found.email,
       name: found.userProfile?.nickname ?? '',
       type,
-      miniImageUrl: this.characterService.getCharacterImageUrl(type, 'mini'),
-      fullImageUrl: this.characterService.getCharacterImageUrl(type, 'full'),
+      miniImageUrl: this.characterService.getFullCharacterImageUrl(type, 0, 'mini'),
+      fullImageUrl: this.characterService.getFullCharacterImageUrl(type, logStats.level, 'full'),
     };
   }
 
