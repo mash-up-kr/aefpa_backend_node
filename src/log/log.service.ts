@@ -101,42 +101,26 @@ export class LogService {
     return LogDto.fromLogIncludeImages(checkedLog, user.id);
   }
 
-  async update(id: number, updateLogDto: UpdateLogDto, user: UserWithoutPassword): Promise<LogDto> {
-    const { title, description, kick, images } = updateLogDto;
+  async update(
+    id: number,
+    updateLogDto: UpdateLogDto,
+    images: Express.Multer.File[],
+    user: UserWithoutPassword,
+  ): Promise<LogDto> {
+    const { title, description, kick } = updateLogDto;
 
     const checkedLog = await this.checkAuthentication(user, id);
 
-    // 해당로그에 이미 존재하는 이미지들
-    const existImages = checkedLog.images;
-    // 업데이트할 이미지들
-    const updateImages = images;
-
-    // 해당 로그에 이미 존재하는 이미지 원본 urls
-    const existImageOriginals = existImages.map((image) => image.original);
-
-    // 업데이트할 이미지 원본 urls
-    const updateImageOriginals = updateImages.map((image) => image.original);
-
-    // 삭제할 이미지 원본 urls와 이미 존재하는 이미지 원본 urls들의 교집합 urls
-    const unionUrls = existImageOriginals.filter((originalUrl) =>
-      updateImageOriginals.includes(originalUrl),
-    );
-
-    // 삭제할 이미지 - 이미 존재하는 이미지중 교집합에 포함이 되지 않는 이미지
-    const deleteImages = existImages.filter((existUrl) => !unionUrls.includes(existUrl.original));
-
-    // 추가될 이미지 - 업데이트할 이미지중 교집합에 포함이 되지 않는 이미지
-    const insertImages = updateImages.filter(
-      (updateUrl) => !unionUrls.includes(updateUrl.original),
-    );
+    const uploadedImages = await this.s3Service.upload(images, 'log');
 
     // transaction start
     const updateLog = await this.prismaService.$transaction(async () => {
-      // 삭제할 이미지는 삭제
-      await Promise.all(deleteImages.map((image) => this.imageService.delete(image.id)));
-      // 추가할 이미지는 추가
+      // 기존 이미지는 모두 삭제
+      await Promise.all(checkedLog.images.map((image) => this.imageService.delete(image.id)));
+
+      // 수정한 이미지는 모두 생성
       await Promise.all(
-        insertImages.map((image) => this.imageService.create(image, checkedLog.id)),
+        uploadedImages.map((image) => this.imageService.create(image, checkedLog.id)),
       );
 
       //update

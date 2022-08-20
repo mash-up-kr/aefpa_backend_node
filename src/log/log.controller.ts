@@ -102,14 +102,35 @@ export class LogController {
 
   @ApiOperation({ summary: '간단 끼록 수정' })
   @ApiBearerAuth('jwt')
+  @ApiBody({ type: UpdateLogDto })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FilesInterceptor('images', undefined, {
+      fileFilter: imageFileFilter,
+      limits: {
+        fileSize: 1048576, // 10 M
+      },
+    }),
+  )
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async update(
+    @Req() req: FileValidationErrorReqType,
+    @User() user: UserWithoutPassword,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateLogDto: UpdateLogDto,
-    @User() user: UserWithoutPassword,
+    @UploadedFiles()
+    images: Express.Multer.File[],
   ) {
-    return await this.logService.update(id, updateLogDto, user);
+    if (!images || images.length === 0) {
+      throw new BadRequestException('you should upload at least one image');
+    }
+
+    if (req.fileValidationError) {
+      throw new BadRequestException(req.fileValidationError);
+    }
+
+    return await this.logService.update(id, updateLogDto, images, user);
   }
 
   @ApiOperation({ summary: '간단 끼록 삭제' })
