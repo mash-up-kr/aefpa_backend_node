@@ -618,24 +618,15 @@ export class DetailLogService {
       );
     }
 
-    const recipeDtos: RecipeDto[] = [];
-
-    for (let i = 0; i < descriptions.length; i++) {
-      const recipe = descriptions[i];
-      const uploadedRecipeImage = uploadedRecipeImages[i];
-
-      const createdRecipe: RecipeDto = {
-        description: recipe,
+    return uploadedRecipeImages.map((recipeImage, idx): RecipeDto => {
+      return {
+        description: descriptions[idx],
         image: {
-          original: uploadedRecipeImage.original,
-          w256: uploadedRecipeImage.w256,
-          w1024: uploadedRecipeImage.w1024,
+          original: recipeImage.original,
+          w256: recipeImage.w256,
+          w1024: recipeImage.w1024,
         },
       };
-
-      recipeDtos.push(createdRecipe);
-    }
-
-    return recipeDtos;
+    });
   }
 }
