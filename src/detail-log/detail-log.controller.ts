@@ -7,7 +7,6 @@ import { CreateDetailLogDto } from '@/detail-log/dtos/request/create-detail-log.
 import { UpdateDetailLogDto } from '@/detail-log/dtos/request/update-detail-log.dto';
 import { CursorPaginationDetailLogResponseDto } from '@/detail-log/dtos/response/cursor-pagination-detail-log-response.dto';
 import { DetailLogResponseDto } from '@/detail-log/dtos/response/detail-log-response.dto';
-import { S3Service } from '@/s3/s3.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import {
   BadRequestException,
