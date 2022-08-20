@@ -39,6 +39,12 @@ export class DetailLogDto {
 
   @IsArray()
   @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    return value.split(',').map(String);
+  })
   @ArrayMinSize(1)
   ingredients: string[];
 
