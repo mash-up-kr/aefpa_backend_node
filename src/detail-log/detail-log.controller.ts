@@ -4,9 +4,9 @@ import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-requ
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
 import { DetailLogService } from '@/detail-log/detail-log.service';
 import { CreateDetailLogDto } from '@/detail-log/dtos/request/create-detail-log.dto';
+import { UpdateDetailLogDto } from '@/detail-log/dtos/request/update-detail-log.dto';
 import { CursorPaginationDetailLogResponseDto } from '@/detail-log/dtos/response/cursor-pagination-detail-log-response.dto';
 import { DetailLogResponseDto } from '@/detail-log/dtos/response/detail-log-response.dto';
-import { S3Service } from '@/s3/s3.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import {
   BadRequestException,
@@ -16,6 +16,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -36,10 +37,7 @@ import {
 @ApiTags('끼록 > 상세 끼록')
 @Controller('detail-log')
 export class DetailLogController {
-  constructor(
-    private readonly detailLogService: DetailLogService,
-    private readonly s3Service: S3Service,
-  ) {}
+  constructor(private readonly detailLogService: DetailLogService) {}
 
   @ApiOperation({ summary: '상세 끼록 생성' })
   @ApiBearerAuth('jwt')
@@ -114,6 +112,56 @@ export class DetailLogController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number, @User() user: UserWithoutPassword) {
     return await this.detailLogService.findById(id, user);
+  }
+
+  @ApiOperation({ summary: '상세 끼록 수정' })
+  @ApiBearerAuth('jwt')
+  @ApiBody({ type: UpdateDetailLogDto })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'brandImage', maxCount: 1 },
+      { name: 'recipeImages', maxCount: 100 },
+    ]),
+  )
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  async update(
+    @Req() req: FileValidationErrorReqType,
+    @User() user: UserWithoutPassword,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDetailLogDto: UpdateDetailLogDto,
+    @UploadedFiles()
+    files: {
+      brandImage: Express.Multer.File[];
+      recipeImages: Express.Multer.File[];
+    },
+  ) {
+    const { brandImage, recipeImages } = files;
+
+    if (!brandImage || brandImage.length > 1) {
+      throw new BadRequestException('you should upload one brandImage');
+    }
+
+    if (!recipeImages || recipeImages.length === 0) {
+      throw new BadRequestException('you should upload at least one recipeImages');
+    }
+
+    if (updateDetailLogDto.recipes?.length !== recipeImages.length) {
+      throw new BadRequestException('요청한 레시피 수와 업로드할 레시피 이미지 수가 다릅니다.');
+    }
+
+    if (req.fileValidationError) {
+      throw new BadRequestException(req.fileValidationError);
+    }
+
+    return await this.detailLogService.update(
+      id,
+      updateDetailLogDto,
+      brandImage[0],
+      recipeImages,
+      user,
+    );
   }
 
   @ApiOperation({ summary: '상세 끼록 삭제' })

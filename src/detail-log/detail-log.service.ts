@@ -16,6 +16,8 @@ import { DetailLogWithImageRecipes } from '@/detail-log/types/detail-log.type';
 import { ImageService } from '@/image/image.service';
 import { S3Service } from '@/s3/s3.service';
 import { RecipeDto } from '@/detail-log/dtos/recipe.dto';
+import { UpdateDetailLogDto } from '@/detail-log/dtos/request/update-detail-log.dto';
+import { ImageDto } from '@/image/dtos/image.dto';
 
 @Injectable()
 export class DetailLogService {
@@ -31,9 +33,9 @@ export class DetailLogService {
     recipeImages: Express.Multer.File[],
     user: UserWithoutPassword,
   ): Promise<DetailLogDto> {
-    const { title, description, ingredients: ingredient, recipes } = createDetailLogDto;
+    const { title, description, ingredients, recipes } = createDetailLogDto;
 
-    const uploadedBrandImage = await this.s3Service.upload([brandImage], 'recipe');
+    const [uploadedBrandImage] = await this.s3Service.upload([brandImage], 'recipe');
     const uploadedRecipeImages = await this.s3Service.upload(recipeImages, 'recipe');
 
     if (uploadedRecipeImages.length !== recipes.length) {
@@ -42,23 +44,7 @@ export class DetailLogService {
       );
     }
 
-    const createdRecipes: RecipeDto[] = [];
-
-    for (let i = 0; i < recipes.length; i++) {
-      const recipe = recipes[i];
-      const uploadedRecipeImage = uploadedRecipeImages[i];
-
-      const createdRecipe: RecipeDto = {
-        description: recipe,
-        image: {
-          original: uploadedRecipeImage.original,
-          w256: uploadedRecipeImage.w256,
-          w1024: uploadedRecipeImage.w1024,
-        },
-      };
-
-      createdRecipes.push(createdRecipe);
-    }
+    const recipeDtos: RecipeDto[] = this.makeCompleteRecipeDtos(recipes, uploadedRecipeImages);
 
     const detailLog = await this.prismaService.detailLog.create({
       include: {
@@ -74,7 +60,7 @@ export class DetailLogService {
       data: {
         title,
         description,
-        ingredient: ingredient.join(','),
+        ingredients: ingredients.join(','),
         user: {
           connect: {
             id: user.id,
@@ -82,13 +68,13 @@ export class DetailLogService {
         },
         image: {
           create: {
-            original: uploadedBrandImage[0].original,
-            w_256: uploadedBrandImage[0].w256,
-            w_1024: uploadedBrandImage[0].w1024,
+            original: uploadedBrandImage.original,
+            w_256: uploadedBrandImage.w256,
+            w_1024: uploadedBrandImage.w1024,
           },
         },
         recipes: {
-          create: createdRecipes.map((recipe) => {
+          create: recipeDtos.map((recipe) => {
             return {
               description: recipe.description,
               image: {
@@ -164,83 +150,111 @@ export class DetailLogService {
     return DetailLogDto.fromDetailLogIncludesImageRecipes(checkedDetailLog, user.id);
   }
 
-  //   async update(
-  //     id: number,
-  //     updateDetailLogDto: UpdateDetailLogDto,
-  //     user: UserWithoutPassword,
-  //   ): Promise<DetailLogDto> {
-  //     const { title, description, image, ingredient, recipes } = updateDetailLogDto;
+  async update(
+    detailLogId: number,
+    updateDetailLogDto: UpdateDetailLogDto,
+    brandImage: Express.Multer.File,
+    recipeImages: Express.Multer.File[],
+    user: UserWithoutPassword,
+  ) {
+    const { title, description, ingredients: ingredient, recipes } = updateDetailLogDto;
 
-  //     const checkedAuthenticatedDetailLog = await this.checkAuthentication(user, id);
+    const checkedDetailLog = await this.checkAuthentication(user, detailLogId);
 
-  //     // 해당로그에 이미 존재하는 대표 이미지
-  //     const existImage = checkedAuthenticatedDetailLog.image;
+    const [uploadedBrandImage] = await this.s3Service.upload([brandImage], 'recipe');
+    const uploadedRecipeImages = await this.s3Service.upload(recipeImages, 'recipe');
 
-  //     // 업데이트할 대표 이미지
-  //     const updateImage = image;
+    if (uploadedRecipeImages.length !== recipes.length) {
+      throw new InternalServerErrorException(
+        '요청한 레시피 수와 업로드된 레시피 이미지 수가 다릅니다.',
+      );
+    }
 
-  //     // 해당 로그에 이미 존재하는 레시피들
-  //     const existRecipes = checkedAuthenticatedDetailLog.recipes;
+    const recipeDtos: RecipeDto[] = this.makeCompleteRecipeDtos(recipes, uploadedRecipeImages);
 
-  //     const newRecipes = recipes.filter((recipe) => !recipe.id);
+    // transaction start
+    const updatedDetailLog = await this.prismaService.$transaction(async () => {
+      // create brandImage
+      await this.prismaService.image.create({
+        data: {
+          original: uploadedBrandImage.original,
+          w_256: uploadedBrandImage.w256,
+          w_1024: uploadedBrandImage.w1024,
+          detailLog: {
+            connect: {
+              id: detailLogId,
+            },
+          },
+        },
+      });
 
-  //     const deleteRecipes = existRecipes
-  //       .map((_d) => _d.id)
-  //       .filter((_d) => !recipes.map((_d) => _d.id).includes(_d));
-  //     const updateRecipes = existRecipes
-  //       .map((_d) => _d.id)
-  //       .filter((_d) => recipes.map((_d) => _d.id).includes(_d));
+      // delete brandImage
+      await this.imageService.delete(checkedDetailLog.image.id);
 
-  //     const updatedDetailLog = await this.prismaService.$transaction(async () => {
-  //       if (existImage.original !== updateImage.original) {
-  //         //삭제하고 추가
-  //         this.imageService.delete(existImage.id);
-  //         this.imageService.create(updateImage, checkedAuthenticatedDetailLog.id);
-  //       }
+      // delete recipes
+      await Promise.all(
+        checkedDetailLog.recipes.map((recipe) =>
+          this.prismaService.recipe.delete({
+            where: {
+              id: recipe.id,
+            },
+          }),
+        ),
+      );
 
-  //       // 삭제할 레시피는 삭제
-  //       await this.prismaService.recipe.deleteMany({
-  //         where: {
-  //           id: {
-  //             in: deleteRecipes,
-  //           },
-  //         },
-  //       });
+      // delete recipe images
+      await Promise.all(
+        checkedDetailLog.recipes.map((recipe) => this.imageService.delete(recipe.image.id)),
+      );
 
-  //       // 추가할 레시피는 추가
-  //       await this.prismaService.recipe.createMany({
-  //         data: newRecipes.map((newRecipe) => {
-  //           return {
-  //             detailLogId: id,
-  //           };
-  //         }),
-  //       });
+      // create recipe and recipe images
+      await Promise.all(
+        recipeDtos.map((createdRecipe) =>
+          this.prismaService.recipe.create({
+            data: {
+              description: createdRecipe.description,
+              image: {
+                create: {
+                  original: createdRecipe.image.original,
+                  w_256: createdRecipe.image.w256,
+                  w_1024: createdRecipe.image.w1024,
+                },
+              },
+              DetailLog: {
+                connect: {
+                  id: detailLogId,
+                },
+              },
+            },
+          }),
+        ),
+      );
 
-  //       const updateDetailLog = await this.prismaService.detailLog.update({
-  //         include: {
-  //           image: true,
-  //           recipes: {
-  //             include: {
-  //               image: true,
-  //             },
-  //           },
-  //         },
-  //         where: {
-  //           id,
-  //         },
-  //         data: {
-  //           title,
-  //           description,
-  //           ingredient: ingredient.join(','),
-  //           //   recipes
-  //         },
-  //       });
+      // update detail log
+      return await this.prismaService.detailLog.update({
+        include: {
+          image: true,
+          recipes: {
+            include: {
+              image: true,
+            },
+          },
+          scrapUsers: true,
+          goodUsers: true,
+        },
+        where: {
+          id: detailLogId,
+        },
+        data: {
+          title,
+          description,
+          ingredients: ingredient.join(','),
+        },
+      });
+    });
 
-  //       return updateDetailLog;
-  //     });
-
-  //     return DetailLogDto.fromDetailLogIncludesImageRecipes(updatedDetailLog, user.id);
-  //   }
+    return DetailLogDto.fromDetailLogIncludesImageRecipes(updatedDetailLog, user.id);
+  }
 
   async delete(id: number, user: UserWithoutPassword) {
     const checkedDetailLog = await this.checkAuthentication(user, id);
@@ -592,5 +606,27 @@ export class DetailLogService {
         totalCount,
       },
     );
+  }
+
+  private makeCompleteRecipeDtos(
+    descriptions: string[],
+    uploadedRecipeImages: ImageDto[],
+  ): RecipeDto[] {
+    if (descriptions.length !== uploadedRecipeImages.length) {
+      throw new InternalServerErrorException(
+        '요청한 레시피 수와 업로드된 레시피 이미지 수가 다릅니다.',
+      );
+    }
+
+    return uploadedRecipeImages.map((recipeImage, idx): RecipeDto => {
+      return {
+        description: descriptions[idx],
+        image: {
+          original: recipeImage.original,
+          w256: recipeImage.w256,
+          w1024: recipeImage.w1024,
+        },
+      };
+    });
   }
 }

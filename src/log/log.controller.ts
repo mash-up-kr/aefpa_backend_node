@@ -5,7 +5,6 @@ import { FileValidationErrorReqType } from '@/common/types/image-request.type';
 import { CreateLogDto } from '@/log/dto/request/create-log.dto';
 import { UpdateLogDto } from '@/log/dto/request/update-log.dto';
 import { LogService } from '@/log/log.service';
-import { S3Service } from '@/s3/s3.service';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import {
   BadRequestException,
@@ -39,7 +38,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 @ApiTags('끼록 > 간단 끼록')
 @Controller('logs')
 export class LogController {
-  constructor(private readonly logService: LogService, private readonly s3Service: S3Service) {}
+  constructor(private readonly logService: LogService) {}
 
   @ApiOperation({ summary: '간단 끼록 생성' })
   @ApiBearerAuth('jwt')
