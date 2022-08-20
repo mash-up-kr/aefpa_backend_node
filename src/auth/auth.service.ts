@@ -234,10 +234,13 @@ export class AuthService {
   }
 
   async resetPassword(
-    userId: number,
+    email: string,
     newPassword: string,
     confirmPassword: string,
   ): Promise<boolean> {
+    const foundUser = checkExists(await this.userService.findUserByEmail(email), 'email');
+    const userId = foundUser.id;
+
     const userCode = await this.prismaService.userCode.findFirst({
       where: { userId, type: 'CHANGE_PASSWORD', NOT: { confirmedAt: null } },
     });
