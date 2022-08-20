@@ -32,7 +32,7 @@ export class DetailLogService {
     recipeImages: Express.Multer.File[],
     user: UserWithoutPassword,
   ): Promise<DetailLogDto> {
-    const { title, description, ingredients: ingredient, recipes } = createDetailLogDto;
+    const { title, description, ingredients, recipes } = createDetailLogDto;
 
     const uploadedBrandImage = await this.s3Service.upload([brandImage], 'recipe');
     const uploadedRecipeImages = await this.s3Service.upload(recipeImages, 'recipe');
@@ -75,7 +75,7 @@ export class DetailLogService {
       data: {
         title,
         description,
-        ingredient: ingredient.join(','),
+        ingredients: ingredients.join(','),
         user: {
           connect: {
             id: user.id,
@@ -279,7 +279,7 @@ export class DetailLogService {
         data: {
           title,
           description,
-          ingredient: ingredient.join(','),
+          ingredients: ingredient.join(','),
         },
       });
     });

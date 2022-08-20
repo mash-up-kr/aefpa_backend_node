@@ -72,7 +72,7 @@ export class DetailLogDto {
       title,
       description,
       image,
-      ingredient,
+      ingredients,
       createdAt,
       updatedAt,
       recipes,
@@ -91,7 +91,7 @@ export class DetailLogDto {
         updatedAt: moment(updatedAt).format(),
         title,
         description,
-        ingredients: ingredient.split(','),
+        ingredients: ingredients.split(','),
         image: customPlainToInstance(ImageDto, {
           original: image.original,
           w256: image.w_256,
@@ -122,7 +122,7 @@ export class DetailLogDto {
       updatedAt: moment(updatedAt).format(),
       title,
       description,
-      ingredients: ingredient.split(','),
+      ingredients: ingredients.split(','),
       image: customPlainToInstance(ImageDto, {
         original: image.original,
         w256: image.w_256,
