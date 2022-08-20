@@ -205,8 +205,6 @@ export class DetailLogService {
 
     // transaction start
     const updatedDetailLog = await this.prismaService.$transaction(async () => {
-      // delete brandImage
-      await this.imageService.delete(checkedDetailLog.image.id);
       // create brandImage
       await this.prismaService.image.create({
         data: {
@@ -220,6 +218,9 @@ export class DetailLogService {
           },
         },
       });
+
+      // delete brandImage
+      await this.imageService.delete(checkedDetailLog.image.id);
 
       // delete recipes
       await Promise.all(
