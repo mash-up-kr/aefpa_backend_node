@@ -219,6 +219,14 @@ export class AuthService {
     return true;
   }
 
+  async validateEmailExists(email: string) {
+    const foundUser = await this.prismaService.user.findUnique({ where: { email } });
+    if (!this.isUserExistsAndRegistered(foundUser)) {
+      throw new NotFoundException(ErrorMessages.notFound('email'));
+    }
+    return true;
+  }
+
   private isUserExistsAndRegistered(user: User | null) {
     return user && user.password != null;
   }
@@ -234,10 +242,13 @@ export class AuthService {
   }
 
   async resetPassword(
-    userId: number,
+    email: string,
     newPassword: string,
     confirmPassword: string,
   ): Promise<boolean> {
+    const foundUser = checkExists(await this.userService.findUserByEmail(email), 'email');
+    const userId = foundUser.id;
+
     const userCode = await this.prismaService.userCode.findFirst({
       where: { userId, type: 'CHANGE_PASSWORD', NOT: { confirmedAt: null } },
     });
