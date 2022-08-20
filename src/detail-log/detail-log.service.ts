@@ -17,6 +17,7 @@ import { ImageService } from '@/image/image.service';
 import { S3Service } from '@/s3/s3.service';
 import { RecipeDto } from '@/detail-log/dtos/recipe.dto';
 import { UpdateDetailLogDto } from '@/detail-log/dtos/request/update-detail-log.dto';
+import { ImageDto } from '@/image/dtos/image.dto';
 
 @Injectable()
 export class DetailLogService {
@@ -43,23 +44,7 @@ export class DetailLogService {
       );
     }
 
-    const createdRecipes: RecipeDto[] = [];
-
-    for (let i = 0; i < recipes.length; i++) {
-      const recipe = recipes[i];
-      const uploadedRecipeImage = uploadedRecipeImages[i];
-
-      const createdRecipe: RecipeDto = {
-        description: recipe,
-        image: {
-          original: uploadedRecipeImage.original,
-          w256: uploadedRecipeImage.w256,
-          w1024: uploadedRecipeImage.w1024,
-        },
-      };
-
-      createdRecipes.push(createdRecipe);
-    }
+    const recipeDtos: RecipeDto[] = this.makeCompleteRecipeDtos(recipes, uploadedRecipeImages);
 
     const detailLog = await this.prismaService.detailLog.create({
       include: {
@@ -89,7 +74,7 @@ export class DetailLogService {
           },
         },
         recipes: {
-          create: createdRecipes.map((recipe) => {
+          create: recipeDtos.map((recipe) => {
             return {
               description: recipe.description,
               image: {
@@ -185,23 +170,7 @@ export class DetailLogService {
       );
     }
 
-    const createdRecipes: RecipeDto[] = [];
-
-    for (let i = 0; i < recipes.length; i++) {
-      const recipe = recipes[i];
-      const uploadedRecipeImage = uploadedRecipeImages[i];
-
-      const createdRecipe: RecipeDto = {
-        description: recipe,
-        image: {
-          original: uploadedRecipeImage.original,
-          w256: uploadedRecipeImage.w256,
-          w1024: uploadedRecipeImage.w1024,
-        },
-      };
-
-      createdRecipes.push(createdRecipe);
-    }
+    const recipeDtos: RecipeDto[] = this.makeCompleteRecipeDtos(recipes, uploadedRecipeImages);
 
     // transaction start
     const updatedDetailLog = await this.prismaService.$transaction(async () => {
@@ -240,7 +209,7 @@ export class DetailLogService {
 
       // create recipe and recipe images
       await Promise.all(
-        createdRecipes.map((createdRecipe) =>
+        recipeDtos.map((createdRecipe) =>
           this.prismaService.recipe.create({
             data: {
               description: createdRecipe.description,
@@ -637,5 +606,36 @@ export class DetailLogService {
         totalCount,
       },
     );
+  }
+
+  private makeCompleteRecipeDtos(
+    descriptions: string[],
+    uploadedRecipeImages: ImageDto[],
+  ): RecipeDto[] {
+    if (descriptions.length !== uploadedRecipeImages.length) {
+      throw new InternalServerErrorException(
+        '요청한 레시피 수와 업로드된 레시피 이미지 수가 다릅니다.',
+      );
+    }
+
+    const recipeDtos: RecipeDto[] = [];
+
+    for (let i = 0; i < descriptions.length; i++) {
+      const recipe = descriptions[i];
+      const uploadedRecipeImage = uploadedRecipeImages[i];
+
+      const createdRecipe: RecipeDto = {
+        description: recipe,
+        image: {
+          original: uploadedRecipeImage.original,
+          w256: uploadedRecipeImage.w256,
+          w1024: uploadedRecipeImage.w1024,
+        },
+      };
+
+      recipeDtos.push(createdRecipe);
+    }
+
+    return recipeDtos;
   }
 }
