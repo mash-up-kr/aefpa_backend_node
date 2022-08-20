@@ -222,7 +222,7 @@ export class AuthService {
   async validateEmailExists(email: string) {
     const foundUser = await this.prismaService.user.findUnique({ where: { email } });
     if (!this.isUserExistsAndRegistered(foundUser)) {
-      throw new NotFoundException(ErrorMessages.alreadyExists('email'));
+      throw new NotFoundException(ErrorMessages.notFound('email'));
     }
     return true;
   }
