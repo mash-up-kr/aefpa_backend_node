@@ -219,6 +219,14 @@ export class AuthService {
     return true;
   }
 
+  async validateEmailExists(email: string) {
+    const foundUser = await this.prismaService.user.findUnique({ where: { email } });
+    if (!this.isUserExistsAndRegistered(foundUser)) {
+      throw new NotFoundException(ErrorMessages.alreadyExists('email'));
+    }
+    return true;
+  }
+
   private isUserExistsAndRegistered(user: User | null) {
     return user && user.password != null;
   }

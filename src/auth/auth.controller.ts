@@ -16,6 +16,7 @@ import {
   ApiBadRequestResponse,
   ApiBody,
   ApiConflictResponse,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
@@ -73,6 +74,14 @@ export class AuthController {
   @Get('validate/nickname')
   async validateNickname(@Query() { nickname }: ValidateNicknameRequest) {
     return await this.authService.validateNickname(nickname);
+  }
+
+  @ApiOperation({ summary: '이메일 존재 여부 검사' })
+  @ApiBadRequestResponse({ description: '이메일이 잘못되었습니다.' })
+  @ApiNotFoundResponse({ description: '찾을 수 없는 이메일입니다.' })
+  @Get('validate/email/exist')
+  async validateEmailExists(@Query() { email }: ValidateEmailRequest) {
+    return await this.authService.validateEmailExists(email);
   }
 
   @ApiOperation({ summary: '패스워드 리셋' })
