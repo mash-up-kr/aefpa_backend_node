@@ -34,7 +34,7 @@ export class DetailLogService {
   ): Promise<DetailLogDto> {
     const { title, description, ingredients, recipes } = createDetailLogDto;
 
-    const uploadedBrandImage = await this.s3Service.upload([brandImage], 'recipe');
+    const [uploadedBrandImage] = await this.s3Service.upload([brandImage], 'recipe');
     const uploadedRecipeImages = await this.s3Service.upload(recipeImages, 'recipe');
 
     if (uploadedRecipeImages.length !== recipes.length) {
@@ -83,9 +83,9 @@ export class DetailLogService {
         },
         image: {
           create: {
-            original: uploadedBrandImage[0].original,
-            w_256: uploadedBrandImage[0].w256,
-            w_1024: uploadedBrandImage[0].w1024,
+            original: uploadedBrandImage.original,
+            w_256: uploadedBrandImage.w256,
+            w_1024: uploadedBrandImage.w1024,
           },
         },
         recipes: {
@@ -176,7 +176,7 @@ export class DetailLogService {
 
     const checkedDetailLog = await this.checkAuthentication(user, detailLogId);
 
-    const uploadedBrandImage = await this.s3Service.upload([brandImage], 'recipe');
+    const [uploadedBrandImage] = await this.s3Service.upload([brandImage], 'recipe');
     const uploadedRecipeImages = await this.s3Service.upload(recipeImages, 'recipe');
 
     if (uploadedRecipeImages.length !== recipes.length) {
@@ -208,9 +208,9 @@ export class DetailLogService {
       // create brandImage
       await this.prismaService.image.create({
         data: {
-          original: uploadedBrandImage[0].original,
-          w_256: uploadedBrandImage[0].w256,
-          w_1024: uploadedBrandImage[0].w1024,
+          original: uploadedBrandImage.original,
+          w_256: uploadedBrandImage.w256,
+          w_1024: uploadedBrandImage.w1024,
           detailLog: {
             connect: {
               id: detailLogId,
