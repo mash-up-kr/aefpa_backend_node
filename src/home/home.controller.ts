@@ -1,8 +1,8 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { HomeStatusResponse } from '@/home/dto/home-character.response';
-import { HomeFriendsResponse } from '@/home/dto/home-friends.response';
 import { HomeService } from '@/home/home.service';
+import { UserResponse } from '@/user/entity/user.dto';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -28,7 +28,7 @@ export class HomeController {
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get('friends')
-  async getFriendsList(@User() user: UserWithoutPassword): Promise<HomeFriendsResponse> {
+  async getFriendsList(@User() user: UserWithoutPassword): Promise<UserResponse[]> {
     return await this.homeService.getFriends(user.id);
   }
 }

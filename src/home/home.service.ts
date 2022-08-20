@@ -1,7 +1,7 @@
 import { CharacterService } from '@/character/character.service';
 import { HomeStatusResponse } from '@/home/dto/home-character.response';
-import { HomeFriendsResponse } from '@/home/dto/home-friends.response';
 import { PrismaService } from '@/prisma/prisma.service';
+import { UserResponse } from '@/user/entity/user.dto';
 import { UserService } from '@/user/user.service';
 import { Injectable } from '@nestjs/common';
 
@@ -40,7 +40,7 @@ export class HomeService {
    * TODO: New indicator
    * TODO: Sort by the time when the log posted
    */
-  async getFriends(userId: number): Promise<HomeFriendsResponse> {
+  async getFriends(userId: number): Promise<UserResponse[]> {
     const ret = await this.prismaService.follows.findMany({
       select: {
         following: {
@@ -55,10 +55,8 @@ export class HomeService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return {
-      users: ret.map((item) => {
-        return this.userService.mapUser(item.following);
-      }),
-    };
+    return ret.map((item) => {
+      return this.userService.mapUser(item.following);
+    });
   }
 }
