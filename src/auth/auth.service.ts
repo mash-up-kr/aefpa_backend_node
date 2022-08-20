@@ -127,7 +127,7 @@ export class AuthService {
   async generateAuthCode(email: string, type: AuthCodeType) {
     const foundUser = await this.userService.findUserByEmail(email);
 
-    if (this.isUserExistsAndRegistered(foundUser)) {
+    if (type === 'SIGN_UP' && this.isUserExistsAndRegistered(foundUser)) {
       throw new ConflictException(ErrorMessages.alreadyExists('email'));
     }
 
