@@ -99,6 +99,9 @@ export class DetailLogController {
     @Query() cursorPaginationRequestDto: CursorPaginationRequestDto,
     @User() user: UserWithoutPassword,
   ) {
+    if (cursorPaginationRequestDto.endCursor && !cursorPaginationRequestDto.pageSize) {
+      throw new BadRequestException('endCursor는 있는데 pageSize가 없을수 없어요');
+    }
     return await this.detailLogService.findAll(cursorPaginationRequestDto, user);
   }
 
