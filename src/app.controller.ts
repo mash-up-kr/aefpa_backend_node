@@ -6,6 +6,6 @@ export class AppController {
   @ApiOperation({ summary: 'Health Check' })
   @Get()
   async getHello() {
-    return 'ggi--rok';
+    return 'ggi--rok-1';
   }
 }

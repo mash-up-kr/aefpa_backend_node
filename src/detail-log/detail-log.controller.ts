@@ -1,6 +1,7 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
+import { ShortLogResponseDto } from '@/common/dto/response/short-log-response.dto';
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
 import { DetailLogService } from '@/detail-log/detail-log.service';
 import { CreateDetailLogDto } from '@/detail-log/dtos/request/create-detail-log.dto';
@@ -87,11 +88,12 @@ export class DetailLogController {
     );
   }
 
-  @ApiOperation({ summary: '상세 끼록 목록 조회(페이지네이션)' })
+  @ApiOperation({ summary: '상세 끼록 목록 조회' })
   @ApiBearerAuth('jwt')
   @ApiOkResponse({
     description: '성공',
-    type: CursorPaginationDetailLogResponseDto,
+    type: ShortLogResponseDto,
+    isArray: true,
   })
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -99,6 +101,9 @@ export class DetailLogController {
     @Query() cursorPaginationRequestDto: CursorPaginationRequestDto,
     @User() user: UserWithoutPassword,
   ) {
+    if (cursorPaginationRequestDto.endCursor && !cursorPaginationRequestDto.pageSize) {
+      throw new BadRequestException('endCursor는 있는데 pageSize가 없을수 없어요');
+    }
     return await this.detailLogService.findAll(cursorPaginationRequestDto, user);
   }
 

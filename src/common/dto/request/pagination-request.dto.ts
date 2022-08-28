@@ -2,7 +2,8 @@ import { IsNumber, IsOptional } from 'class-validator';
 
 class PaginationRequestDto {
   @IsNumber()
-  pageSize: number;
+  @IsOptional()
+  pageSize?: number;
 }
 
 export class CursorPaginationRequestDto extends PaginationRequestDto {
