@@ -13,6 +13,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set up node version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.14.2
 
       # Refs:
       # https://stackoverflow.com/questions/67062308/getting-yn0028-the-lockfile-would-have-been-modified-by-this-install-which-is-e
