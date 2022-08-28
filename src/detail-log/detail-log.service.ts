@@ -18,6 +18,8 @@ import { S3Service } from '@/s3/s3.service';
 import { RecipeDto } from '@/detail-log/dtos/recipe.dto';
 import { UpdateDetailLogDto } from '@/detail-log/dtos/request/update-detail-log.dto';
 import { ImageDto } from '@/image/dtos/image.dto';
+import { ShortLogResponseDto } from '@/common/dto/response/short-log-response.dto';
+import * as moment from 'moment';
 
 @Injectable()
 export class DetailLogService {
@@ -93,10 +95,7 @@ export class DetailLogService {
     return DetailLogDto.fromDetailLogIncludesImageRecipes(detailLog, user.id);
   }
 
-  async findAll(
-    cursorPaginationRequestDto: CursorPaginationRequestDto,
-    user: UserWithoutPassword,
-  ): Promise<DetailLogDto[] | CursorPaginationDetailLogResponseDto> {
+  async findAll(cursorPaginationRequestDto: CursorPaginationRequestDto, user: UserWithoutPassword) {
     const { pageSize, endCursor } = cursorPaginationRequestDto;
 
     //find all without cursor pagination
@@ -120,9 +119,18 @@ export class DetailLogService {
         },
       });
 
-      return foundDetailLogs.map((foundDetailLog) =>
-        DetailLogDto.fromDetailLogIncludesImageRecipes(foundDetailLog, user.id),
-      );
+      return foundDetailLogs.map((foundLog): ShortLogResponseDto => {
+        return {
+          id: foundLog.id,
+          image: {
+            original: foundLog.image.original,
+            w256: foundLog.image.w_256,
+            w1024: foundLog.image.w_1024,
+          },
+          createdAt: moment(foundLog.createdAt).format(),
+          title: foundLog.title,
+        };
+      });
     }
 
     return await this.findAllByCursorPagination(user, pageSize, endCursor);
