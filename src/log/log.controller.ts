@@ -34,6 +34,7 @@ import {
 import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
 import { LogResponseDto } from '@/log/dto/response/log-response.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ShortLogResponseDto } from '@/common/dto/response/short-log-response.dto';
 
 @ApiTags('끼록 > 간단 끼록')
 @Controller('logs')
@@ -72,11 +73,12 @@ export class LogController {
     return await this.logService.create(createLogDto, images, user);
   }
 
-  @ApiOperation({ summary: '간단 끼록 목록 조회(페이지네이션)' })
+  @ApiOperation({ summary: '간단 끼록 목록 조회' })
   @ApiBearerAuth('jwt')
   @ApiOkResponse({
     description: '성공',
-    type: CursorPaginationLogResponseDto,
+    type: ShortLogResponseDto,
+    isArray: true,
   })
   @UseGuards(JwtAuthGuard)
   @Get()
