@@ -4,7 +4,7 @@ import { HomeStatusResponse } from '@/home/dto/home-character.response';
 import { HomeService } from '@/home/home.service';
 import { UserResponse } from '@/user/entity/user.dto';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
-import { Controller, Get, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('user')
@@ -42,5 +42,15 @@ export class HomeController {
   @Get('friends')
   async getFriendsList(@User() user: UserWithoutPassword): Promise<UserResponse[]> {
     return await this.homeService.getFriends(user.id);
+  }
+
+  @ApiOperation({
+    summary: '캐릭터 레벨 업',
+  })
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard)
+  @Post('level-up')
+  async levelUpCharacter(@User() user: UserWithoutPassword): Promise<boolean> {
+    return await this.homeService.levelUpCharacter(user.id);
   }
 }

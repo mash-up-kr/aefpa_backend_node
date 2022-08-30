@@ -1,7 +1,9 @@
 import { CharacterType } from '@/api/server/generated';
 import { CharacterStatus } from '@/character/character.types';
 import { S3Service } from '@/s3/s3.service';
+import { zip } from '@/util/common';
 import { Injectable } from '@nestjs/common';
+import { clamp } from 'lodash';
 import * as moment from 'moment';
 
 /**
@@ -24,6 +26,8 @@ export class CharacterService {
     },
   };
 
+  private levelRequirements = [0, 10, 30];
+
   constructor(private s3Service: S3Service) {}
 
   characterStatus(lastFeedAt?: Date, current?: Date): CharacterStatus {
@@ -44,5 +48,25 @@ export class CharacterService {
 
   getPhrase(type: CharacterType, status: CharacterStatus) {
     return this.phrases[type][status];
+  }
+
+  calculateLevelProgress(numberOfLogs: number, currentLevel: number) {
+    const level = clamp(currentLevel, 1, 3);
+    const zipped = zip(this.levelRequirements, [...this.levelRequirements.slice(1), undefined]);
+    const [prev, next] = zipped[level - 1];
+    const max = next != null ? next - prev : prev;
+    const progress = next != null ? numberOfLogs - prev : prev;
+
+    return {
+      level,
+      max,
+      progress,
+    };
+  }
+
+  checkLevelUpRequirement(numberOfLogs: number, currentLevel: number) {
+    if (currentLevel >= this.levelRequirements.length) return false;
+    const { max, progress } = this.calculateLevelProgress(numberOfLogs, currentLevel);
+    return progress >= max;
   }
 }

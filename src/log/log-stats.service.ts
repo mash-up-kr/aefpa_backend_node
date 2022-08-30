@@ -1,15 +1,18 @@
 import { Prisma } from '@/api/server/generated';
+import { CharacterService } from '@/character/character.service';
 import { LogStatsResponse } from '@/log/dto/log-stats.response';
 import { PrismaService } from '@/prisma/prisma.service';
-import { zip } from '@/util/common';
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 
 @Injectable()
 export class LogStatsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly characterService: CharacterService,
+  ) {}
 
-  private async getLogCount(condition: Prisma.DetailLogWhereInput) {
+  async getLogCount(condition: Prisma.DetailLogWhereInput) {
     const [detailLogCount, logCount] = await Promise.all([
       this.prismaService.detailLog.count({ where: condition }),
       this.prismaService.log.count({ where: condition }),
@@ -20,7 +23,14 @@ export class LogStatsService {
 
   async getLogStats(userId: number, includeToday?: boolean): Promise<LogStatsResponse> {
     const numberOfLogsTotal = await this.getLogCount({ userId });
-    if (!includeToday) return this.calculateLogStats(numberOfLogsTotal);
+    const character = await this.prismaService.userCharacter.findFirst({ where: { userId } });
+    const currentLevel = character?.level ?? 1;
+
+    if (!includeToday)
+      return {
+        ...this.characterService.calculateLevelProgress(numberOfLogsTotal, currentLevel),
+        total: numberOfLogsTotal,
+      };
 
     const start = moment().utcOffset('+0900').startOf('day');
     const end = moment(start).utcOffset('+0900').add(1, 'day');
@@ -33,36 +43,9 @@ export class LogStatsService {
     });
 
     return {
-      ...this.calculateLogStats(numberOfLogsTotal),
+      ...this.characterService.calculateLevelProgress(numberOfLogsTotal, currentLevel),
+      total: numberOfLogsTotal,
       today,
-    };
-  }
-
-  private calculateLogStats(numberOfLogs: number) {
-    const goals = [0, 10, 30];
-    const zipped = zip(goals, [...goals.slice(1), undefined]);
-
-    for (let i = 0; i < zipped.length; i++) {
-      const [prev, next] = zipped[i];
-      if (numberOfLogs >= prev && (next == null || numberOfLogs < next)) {
-        const level = i + 1;
-        const max = next != null ? next - prev : prev;
-        const progress = next != null ? numberOfLogs - prev : prev;
-
-        return {
-          level,
-          max,
-          progress,
-          total: numberOfLogs,
-        };
-      }
-    }
-
-    return {
-      level: 1,
-      max: 10,
-      progress: 0,
-      total: numberOfLogs,
     };
   }
 }
