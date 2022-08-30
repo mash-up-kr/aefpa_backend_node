@@ -63,4 +63,10 @@ export class CharacterService {
       progress,
     };
   }
+
+  checkLevelUpRequirement(numberOfLogs: number, currentLevel: number) {
+    if (currentLevel >= this.levelRequirements.length) return false;
+    const { max, progress } = this.calculateLevelProgress(numberOfLogs, currentLevel);
+    return progress >= max;
+  }
 }

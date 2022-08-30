@@ -1,15 +1,17 @@
 import { CharacterService } from '@/character/character.service';
 import { HomeStatusResponse } from '@/home/dto/home-character.response';
+import { LogStatsService } from '@/log/log-stats.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserResponse } from '@/user/entity/user.dto';
 import { UserService } from '@/user/user.service';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class HomeService {
   constructor(
     private prismaService: PrismaService,
     private userService: UserService,
+    private logStatsService: LogStatsService,
     private characterService: CharacterService,
   ) {}
 
@@ -58,5 +60,23 @@ export class HomeService {
     return ret.map((item) => {
       return this.userService.mapUser(item.following);
     });
+  }
+
+  async levelUpCharacter(userId: number) {
+    const totalLogs = await this.logStatsService.getLogCount({ userId });
+    const currentLevel =
+      (await this.prismaService.userCharacter.findFirst({ where: { userId } }))?.level ?? 1;
+    const canLevelUp = this.characterService.checkLevelUpRequirement(totalLogs, currentLevel);
+
+    if (!canLevelUp) {
+      throw new BadRequestException('Level up requirement not met');
+    }
+
+    await this.prismaService.userCharacter.update({
+      data: { level: currentLevel + 1 },
+      where: { userId },
+    });
+
+    return true;
   }
 }

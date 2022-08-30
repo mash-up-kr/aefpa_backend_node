@@ -1,3 +1,4 @@
+import { CharacterModule } from '@/character/character.module';
 import { ImageModule } from '@/image/image.module';
 import { LogStatsService } from '@/log/log-stats.service';
 import { LogController } from '@/log/log.controller';
@@ -6,7 +7,7 @@ import { S3Module } from '@/s3/s3.module';
 import { Module } from '@nestjs/common';
 
 @Module({
-  imports: [ImageModule, S3Module],
+  imports: [ImageModule, S3Module, CharacterModule],
   providers: [LogService, LogStatsService],
   controllers: [LogController],
   exports: [LogService, LogStatsService],

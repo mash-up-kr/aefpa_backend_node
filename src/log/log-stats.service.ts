@@ -12,7 +12,7 @@ export class LogStatsService {
     private readonly characterService: CharacterService,
   ) {}
 
-  private async getLogCount(condition: Prisma.DetailLogWhereInput) {
+  async getLogCount(condition: Prisma.DetailLogWhereInput) {
     const [detailLogCount, logCount] = await Promise.all([
       this.prismaService.detailLog.count({ where: condition }),
       this.prismaService.log.count({ where: condition }),
