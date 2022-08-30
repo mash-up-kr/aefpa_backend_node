@@ -1,14 +1,16 @@
 import { Prisma } from '@/api/server/generated';
+import { CharacterService } from '@/character/character.service';
 import { LogStatsResponse } from '@/log/dto/log-stats.response';
 import { PrismaService } from '@/prisma/prisma.service';
-import { zip } from '@/util/common';
 import { Injectable } from '@nestjs/common';
-import { clamp } from 'lodash';
 import * as moment from 'moment';
 
 @Injectable()
 export class LogStatsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly characterService: CharacterService,
+  ) {}
 
   private async getLogCount(condition: Prisma.DetailLogWhereInput) {
     const [detailLogCount, logCount] = await Promise.all([
@@ -24,7 +26,11 @@ export class LogStatsService {
     const character = await this.prismaService.userCharacter.findFirst({ where: { userId } });
     const currentLevel = character?.level ?? 1;
 
-    if (!includeToday) return this.calculateLogStats(numberOfLogsTotal, currentLevel);
+    if (!includeToday)
+      return {
+        ...this.characterService.calculateLevelProgress(numberOfLogsTotal, currentLevel),
+        total: numberOfLogsTotal,
+      };
 
     const start = moment().utcOffset('+0900').startOf('day');
     const end = moment(start).utcOffset('+0900').add(1, 'day');
@@ -37,26 +43,9 @@ export class LogStatsService {
     });
 
     return {
-      ...this.calculateLogStats(numberOfLogsTotal, currentLevel),
+      ...this.characterService.calculateLevelProgress(numberOfLogsTotal, currentLevel),
+      total: numberOfLogsTotal,
       today,
-    };
-  }
-
-  calculateLogStats(numberOfLogs: number, currentLevel: number) {
-    const level = clamp(currentLevel, 1, 3);
-
-    const goals = [0, 10, 30];
-    const zipped = zip(goals, [...goals.slice(1), undefined]);
-
-    const [prev, next] = zipped[level - 1];
-    const max = next != null ? next - prev : prev;
-    const progress = next != null ? numberOfLogs - prev : prev;
-
-    return {
-      level,
-      max,
-      progress,
-      total: numberOfLogs,
     };
   }
 }
