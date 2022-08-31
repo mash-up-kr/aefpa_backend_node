@@ -57,7 +57,7 @@ export class LogService {
     return LogDto.fromLogIncludeImages(log, user.id);
   }
 
-  async findAll(cursorPaginationRequestDto: CursorPaginationRequestDto, user: UserWithoutPassword) {
+  async findAll(cursorPaginationRequestDto: CursorPaginationRequestDto, userId: number) {
     const { pageSize, endCursor } = cursorPaginationRequestDto;
 
     // find all without cursor pagination
@@ -69,7 +69,7 @@ export class LogService {
           scrapUsers: true,
         },
         where: {
-          userId: user.id,
+          userId,
         },
         orderBy: {
           id: 'desc',
@@ -90,7 +90,7 @@ export class LogService {
       });
     }
 
-    return await this.findAllByCursorPagination(user, pageSize, endCursor);
+    return await this.findAllByCursorPagination(userId, pageSize, endCursor);
   }
 
   async findById(id: number, user: UserWithoutPassword): Promise<LogDto> {
@@ -336,11 +336,7 @@ export class LogService {
   }
 
   // find all by cursor pagination
-  private async findAllByCursorPagination(
-    user: UserWithoutPassword,
-    pageSize: number,
-    endCursor?: string,
-  ) {
+  private async findAllByCursorPagination(userId: number, pageSize: number, endCursor?: string) {
     // first page
     if (!endCursor) {
       const foundLogs = await this.prismaService.log.findMany({
@@ -351,7 +347,7 @@ export class LogService {
           scrapUsers: true,
         },
         where: {
-          userId: user.id,
+          userId,
         },
         orderBy: {
           id: 'desc',
@@ -369,7 +365,7 @@ export class LogService {
       // get has totalCount
       const totalCount = await this.prismaService.log.count({
         where: {
-          userId: user.id,
+          userId: userId,
         },
       });
 
@@ -377,7 +373,7 @@ export class LogService {
       const endCursor =
         foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].id) : null;
 
-      return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, user.id, {
+      return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, userId, {
         pageSize,
         hasNextPage,
         endCursor,
@@ -396,7 +392,7 @@ export class LogService {
         scrapUsers: true,
       },
       where: {
-        userId: user.id,
+        userId: userId,
         id: {
           lt: decodedEndCursor,
         },
@@ -417,7 +413,7 @@ export class LogService {
     // get has totalCount
     const totalCount = await this.prismaService.log.count({
       where: {
-        userId: user.id,
+        userId: userId,
       },
     });
 
@@ -425,7 +421,7 @@ export class LogService {
     const endCursorResult =
       foundLogs.length > 0 ? encodeCursor(foundLogs[foundLogs.length - 1].id) : null;
 
-    return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, user.id, {
+    return CursorPaginationLogResponseDto.fromLogIncludeImages(foundLogs, userId, {
       pageSize,
       hasNextPage,
       endCursor: endCursorResult,

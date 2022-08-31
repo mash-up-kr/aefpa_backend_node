@@ -104,7 +104,7 @@ export class DetailLogController {
     if (cursorPaginationRequestDto.endCursor && !cursorPaginationRequestDto.pageSize) {
       throw new BadRequestException('endCursor는 있는데 pageSize가 없을수 없어요');
     }
-    return await this.detailLogService.findAll(cursorPaginationRequestDto, user);
+    return await this.detailLogService.findAll(cursorPaginationRequestDto, user.id);
   }
 
   @ApiOperation({ summary: '상세 끼록 하나 조회 ' })

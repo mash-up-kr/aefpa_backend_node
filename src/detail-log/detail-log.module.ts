@@ -8,5 +8,6 @@ import { S3Module } from '@/s3/s3.module';
   imports: [ImageModule, S3Module],
   providers: [DetailLogService],
   controllers: [DetailLogController],
+  exports: [DetailLogService],
 })
 export class DetailLogModule {}

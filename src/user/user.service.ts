@@ -1,8 +1,11 @@
 import { CharacterType, Follows, Prisma } from '@/api/server/generated';
 import { CharacterService } from '@/character/character.service';
 import { CharacterStatus } from '@/character/character.types';
+import { ShortLogResponseDto } from '@/common/dto/response/short-log-response.dto';
 import { checkExists } from '@/common/error-util';
+import { DetailLogService } from '@/detail-log/detail-log.service';
 import { LogStatsService } from '@/log/log-stats.service';
+import { LogService } from '@/log/log.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CursorPaginationUserScrapLogResponseDto } from '@/user/dtos/cursor-pagination-user-scrap-log-response.dto';
 import { UserScrapLogDto } from '@/user/dtos/user-scrap-log.dto';
@@ -13,6 +16,7 @@ import { UserEntity } from '@/user/entity/user.entity';
 import { FriendType } from '@/user/user.types';
 import { decodeCursor, encodeCursor } from '@/util/cursor-paginate';
 import { ConflictException, Injectable } from '@nestjs/common';
+import * as moment from 'moment';
 
 @Injectable()
 export class UserService {
@@ -20,6 +24,8 @@ export class UserService {
     private readonly prismaService: PrismaService,
     private readonly logStatsService: LogStatsService,
     private readonly characterService: CharacterService,
+    private readonly logService: LogService,
+    private readonly detailLogService: DetailLogService,
   ) {}
 
   async findUserByEmail(email: string): Promise<UserEntity | null> {
@@ -216,6 +222,56 @@ export class UserService {
     return await this.prismaService.user.delete({
       where: { id: userId },
     });
+  }
+
+  async findAllLogsByUserId(userId: number) {
+    checkExists(
+      await this.prismaService.user.findUnique({
+        where: {
+          id: userId,
+        },
+      }),
+      'user',
+    );
+
+    const [logs, detailLogs] = (await Promise.all([
+      this.logService.findAll(
+        {
+          pageSize: undefined,
+          endCursor: undefined,
+        },
+        userId,
+      ),
+      this.detailLogService.findAll(
+        {
+          pageSize: undefined,
+          endCursor: undefined,
+        },
+        userId,
+      ),
+    ])) as [ShortLogResponseDto[], ShortLogResponseDto[]];
+
+    const mappedLogs = logs.map((log) => {
+      return {
+        ...log,
+        type: 'simple',
+      };
+    });
+    const mappedDetailLogs = detailLogs.map((detailLog) => {
+      return {
+        ...detailLog,
+        type: 'detail',
+      };
+    });
+
+    const sortedLogs = mappedLogs.concat(mappedDetailLogs).sort((prev, curr) => {
+      const prevCreatedAt = moment(prev.createdAt).toDate();
+      const currCreatedAt = moment(curr.createdAt).toDate();
+
+      return currCreatedAt.getTime() - prevCreatedAt.getTime(); // 최신순 정렬
+    });
+
+    return sortedLogs;
   }
 
   // find all by cursor pagination
