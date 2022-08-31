@@ -95,7 +95,7 @@ export class DetailLogService {
     return DetailLogDto.fromDetailLogIncludesImageRecipes(detailLog, user.id);
   }
 
-  async findAll(cursorPaginationRequestDto: CursorPaginationRequestDto, user: UserWithoutPassword) {
+  async findAll(cursorPaginationRequestDto: CursorPaginationRequestDto, userId: number) {
     const { pageSize, endCursor } = cursorPaginationRequestDto;
 
     //find all without cursor pagination
@@ -112,7 +112,7 @@ export class DetailLogService {
           goodUsers: true,
         },
         where: {
-          userId: user.id,
+          userId: userId,
         },
         orderBy: {
           id: 'desc',
@@ -133,7 +133,7 @@ export class DetailLogService {
       });
     }
 
-    return await this.findAllByCursorPagination(user, pageSize, endCursor);
+    return await this.findAllByCursorPagination(userId, pageSize, endCursor);
   }
 
   async findById(id: number, user: UserWithoutPassword): Promise<DetailLogDto> {
@@ -499,11 +499,7 @@ export class DetailLogService {
     return checkedDetailLog;
   }
 
-  private async findAllByCursorPagination(
-    user: UserWithoutPassword,
-    pageSize: number,
-    endCursor?: string,
-  ) {
+  private async findAllByCursorPagination(userId: number, pageSize: number, endCursor?: string) {
     //first page
     if (!endCursor) {
       const foundDetailLogs = await this.prismaService.detailLog.findMany({
@@ -519,7 +515,7 @@ export class DetailLogService {
           goodUsers: true,
         },
         where: {
-          userId: user.id,
+          userId: userId,
         },
         orderBy: {
           id: 'desc',
@@ -535,7 +531,7 @@ export class DetailLogService {
       //get has totalCount
       const totalCount = await this.prismaService.detailLog.count({
         where: {
-          userId: user.id,
+          userId: userId,
         },
       });
 
@@ -547,7 +543,7 @@ export class DetailLogService {
 
       return CursorPaginationDetailLogResponseDto.fromDetailLogIncludeImageRecipes(
         foundDetailLogs,
-        user.id,
+        userId,
         {
           pageSize,
           hasNextPage,
@@ -573,7 +569,7 @@ export class DetailLogService {
         goodUsers: true,
       },
       where: {
-        userId: user.id,
+        userId: userId,
         id: {
           lt: decodedEndCursor,
         },
@@ -594,7 +590,7 @@ export class DetailLogService {
     //get has totalCount
     const totalCount = await this.prismaService.detailLog.count({
       where: {
-        userId: user.id,
+        userId: userId,
       },
     });
 
@@ -606,7 +602,7 @@ export class DetailLogService {
 
     return CursorPaginationDetailLogResponseDto.fromDetailLogIncludeImageRecipes(
       foundDetailLogs,
-      user.id,
+      userId,
       {
         pageSize,
         hasNextPage,
