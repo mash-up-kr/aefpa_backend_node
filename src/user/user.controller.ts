@@ -1,5 +1,6 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
+import { ShortLogResponseDto } from '@/common/dto/response/short-log-response.dto';
 import { FollowRequest } from '@/user/entity/follow.request';
 import { FriendsListRequest } from '@/user/entity/friends-list.request';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
@@ -15,7 +16,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('user')
 @Controller('user')
@@ -63,6 +64,11 @@ export class UserController {
   }
 
   @ApiOperation({ summary: '유저의 전체 끼록 조회' })
+  @ApiOkResponse({
+    description: '성공',
+    type: ShortLogResponseDto,
+    isArray: true,
+  })
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard)
   @Get('/logs/:userId')
