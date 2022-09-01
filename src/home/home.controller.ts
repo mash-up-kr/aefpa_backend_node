@@ -21,7 +21,7 @@ export class HomeController {
   async getFriendStatus(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<HomeStatusResponse> {
-    return await this.homeService.getCharacterStatus(userId);
+    return await this.homeService.getCharacterStatus(userId, true);
   }
 
   @ApiOperation({
@@ -31,7 +31,7 @@ export class HomeController {
   @UseGuards(JwtAuthGuard)
   @Get('status')
   async getStatus(@User() user: UserWithoutPassword): Promise<HomeStatusResponse> {
-    return await this.homeService.getCharacterStatus(user.id);
+    return await this.homeService.getCharacterStatus(user.id, false);
   }
 
   @ApiOperation({
