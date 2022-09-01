@@ -6,3 +6,7 @@ export class ShortLogResponseDto {
   createdAt: string;
   title: string;
 }
+
+export class ShortLogTypeResponseDto extends ShortLogResponseDto {
+  type: string;
+}
