@@ -15,7 +15,7 @@ export class HomeService {
     private characterService: CharacterService,
   ) {}
 
-  async getCharacterStatus(userId: number): Promise<HomeStatusResponse> {
+  async getCharacterStatus(userId: number, isFriend: boolean): Promise<HomeStatusResponse> {
     const mostRecentLog = await this.getMostRecentLog(userId);
     const lastFeedAt = mostRecentLog?.createdAt;
     const status = this.characterService.characterStatus(lastFeedAt);
@@ -26,6 +26,7 @@ export class HomeService {
       status,
       lastFeedAt: lastFeedAt?.toISOString() ?? null,
       phrase: this.characterService.getPhrase(profile.type, status),
+      isFriend,
     };
   }
 
