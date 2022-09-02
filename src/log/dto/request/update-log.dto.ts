@@ -15,5 +15,5 @@ export class UpdateLogDto extends OmitType(LogDto, [
     items: { type: 'string', format: 'binary' },
     multipleOf: 1,
   })
-  images: any;
+  files: any;
 }
