@@ -1,5 +1,6 @@
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { User } from '@/auth/user.decorator';
+import { imageFileFilter } from '@/common/decorators/file.decorator';
 import { CursorPaginationRequestDto } from '@/common/dto/request/pagination-request.dto';
 import { ShortLogResponseDto } from '@/common/dto/response/short-log-response.dto';
 import { FileValidationErrorReqType } from '@/common/types/image-request.type';
@@ -45,10 +46,18 @@ export class DetailLogController {
   @ApiBody({ type: CreateDetailLogDto })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'brandImage', maxCount: 1 },
-      { name: 'recipeImages', maxCount: 100 },
-    ]),
+    FileFieldsInterceptor(
+      [
+        { name: 'brandImage', maxCount: 1 },
+        { name: 'recipeImages', maxCount: 100 },
+      ],
+      {
+        fileFilter: imageFileFilter,
+        limits: {
+          fileSize: 1048576, // 10 M
+        },
+      },
+    ),
   )
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -124,10 +133,18 @@ export class DetailLogController {
   @ApiBody({ type: UpdateDetailLogDto })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'brandImage', maxCount: 1 },
-      { name: 'recipeImages', maxCount: 100 },
-    ]),
+    FileFieldsInterceptor(
+      [
+        { name: 'brandImage', maxCount: 1 },
+        { name: 'recipeImages', maxCount: 100 },
+      ],
+      {
+        fileFilter: imageFileFilter,
+        limits: {
+          fileSize: 1048576, // 10 M
+        },
+      },
+    ),
   )
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
