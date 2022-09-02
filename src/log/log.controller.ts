@@ -31,9 +31,8 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { CursorPaginationLogResponseDto } from '@/log/dto/response/cursor-pagination-log-response.dto';
 import { LogResponseDto } from '@/log/dto/response/log-response.dto';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ShortLogResponseDto } from '@/common/dto/response/short-log-response.dto';
 
 @ApiTags('끼록 > 간단 끼록')
@@ -46,7 +45,7 @@ export class LogController {
   @ApiBody({ type: CreateLogDto })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FilesInterceptor('files', undefined, {
+    FileFieldsInterceptor([{ name: 'images', maxCount: 100 }], {
       fileFilter: imageFileFilter,
       limits: {
         fileSize: 1048576, // 10 M
@@ -60,9 +59,13 @@ export class LogController {
     @User() user: UserWithoutPassword,
     @Body() createLogDto: CreateLogDto,
     @UploadedFiles()
-    files: Express.Multer.File[],
+    files: {
+      images: Express.Multer.File[];
+    },
   ) {
-    if (!files || files.length === 0) {
+    const { images } = files;
+
+    if (!images || images.length === 0) {
       throw new BadRequestException('you should upload at least one image');
     }
 
@@ -70,7 +73,7 @@ export class LogController {
       throw new BadRequestException(req.fileValidationError);
     }
 
-    return await this.logService.create(createLogDto, files, user);
+    return await this.logService.create(createLogDto, images, user);
   }
 
   @ApiOperation({ summary: '간단 끼록 목록 조회' })
@@ -109,7 +112,7 @@ export class LogController {
   @ApiBody({ type: UpdateLogDto })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FilesInterceptor('files', undefined, {
+    FileFieldsInterceptor([{ name: 'images', maxCount: 100 }], {
       fileFilter: imageFileFilter,
       limits: {
         fileSize: 1048576, // 10 M
@@ -124,9 +127,13 @@ export class LogController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateLogDto: UpdateLogDto,
     @UploadedFiles()
-    files: Express.Multer.File[],
+    files: {
+      images: Express.Multer.File[];
+    },
   ) {
-    if (!files || files.length === 0) {
+    const { images } = files;
+
+    if (!images || images.length === 0) {
       throw new BadRequestException('you should upload at least one image');
     }
 
@@ -134,7 +141,7 @@ export class LogController {
       throw new BadRequestException(req.fileValidationError);
     }
 
-    return await this.logService.update(id, updateLogDto, files, user);
+    return await this.logService.update(id, updateLogDto, images, user);
   }
 
   @ApiOperation({ summary: '간단 끼록 삭제' })

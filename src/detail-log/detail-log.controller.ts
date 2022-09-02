@@ -7,7 +7,6 @@ import { FileValidationErrorReqType } from '@/common/types/image-request.type';
 import { DetailLogService } from '@/detail-log/detail-log.service';
 import { CreateDetailLogDto } from '@/detail-log/dtos/request/create-detail-log.dto';
 import { UpdateDetailLogDto } from '@/detail-log/dtos/request/update-detail-log.dto';
-import { CursorPaginationDetailLogResponseDto } from '@/detail-log/dtos/response/cursor-pagination-detail-log-response.dto';
 import { DetailLogResponseDto } from '@/detail-log/dtos/response/detail-log-response.dto';
 import { UserWithoutPassword } from '@/user/entity/user.entity';
 import {
