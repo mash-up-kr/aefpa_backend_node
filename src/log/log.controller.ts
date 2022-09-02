@@ -46,7 +46,7 @@ export class LogController {
   @ApiBody({ type: CreateLogDto })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FilesInterceptor('images', undefined, {
+    FilesInterceptor('files', undefined, {
       fileFilter: imageFileFilter,
       limits: {
         fileSize: 1048576, // 10 M
@@ -60,9 +60,9 @@ export class LogController {
     @User() user: UserWithoutPassword,
     @Body() createLogDto: CreateLogDto,
     @UploadedFiles()
-    images: Express.Multer.File[],
+    files: Express.Multer.File[],
   ) {
-    if (!images || images.length === 0) {
+    if (!files || files.length === 0) {
       throw new BadRequestException('you should upload at least one image');
     }
 
@@ -70,7 +70,7 @@ export class LogController {
       throw new BadRequestException(req.fileValidationError);
     }
 
-    return await this.logService.create(createLogDto, images, user);
+    return await this.logService.create(createLogDto, files, user);
   }
 
   @ApiOperation({ summary: '간단 끼록 목록 조회' })
@@ -109,7 +109,7 @@ export class LogController {
   @ApiBody({ type: UpdateLogDto })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FilesInterceptor('images', undefined, {
+    FilesInterceptor('files', undefined, {
       fileFilter: imageFileFilter,
       limits: {
         fileSize: 1048576, // 10 M
@@ -124,9 +124,9 @@ export class LogController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateLogDto: UpdateLogDto,
     @UploadedFiles()
-    images: Express.Multer.File[],
+    files: Express.Multer.File[],
   ) {
-    if (!images || images.length === 0) {
+    if (!files || files.length === 0) {
       throw new BadRequestException('you should upload at least one image');
     }
 
@@ -134,7 +134,7 @@ export class LogController {
       throw new BadRequestException(req.fileValidationError);
     }
 
-    return await this.logService.update(id, updateLogDto, images, user);
+    return await this.logService.update(id, updateLogDto, files, user);
   }
 
   @ApiOperation({ summary: '간단 끼록 삭제' })
