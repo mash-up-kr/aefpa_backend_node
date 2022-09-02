@@ -14,7 +14,7 @@ export class CharacterService {
   private phrases: Record<CharacterType, Record<CharacterStatus, string>> = {
     GREEN_ONION: {
       happy: '아, 든든하게 잘 먹었어요~',
-      sad: '해가 중천인데 배 안고파요?',
+      sad: '배고파! 일단 뭐라도 먹자!',
     },
     CARROT: {
       happy: '오늘도 에너지 충전! 감사해요',

@@ -55,7 +55,7 @@ export class AllExceptionFilter implements ExceptionFilter {
       errorResponse: exception.errorResponse,
     };
 
-    Logger.error(JSON.stringify(req));
+    Logger.error(req['files']);
     Logger.error(errMsg, [exception.stack, ...(exception.errorStack ?? [])], '[Exception]');
   }
 }
