@@ -4,9 +4,10 @@ import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
-    super({
-      log: ['query'],
-    });
+    super();
+    //   {
+    //   log: ['query'],
+    // }
   }
 
   async onModuleInit() {
